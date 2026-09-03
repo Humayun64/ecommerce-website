@@ -7,6 +7,7 @@ use App\Models\Address;
 use App\Models\Order;
 use App\Models\ShippingZone;
 use App\Services\CartService;
+use App\Services\OrderMailer;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -16,6 +17,7 @@ class CheckoutController extends Controller
     public function __construct(
         private CartService $cart,
         private OrderService $orders,
+        private OrderMailer $mailer,
     ) {
     }
 
@@ -66,6 +68,9 @@ class CheckoutController extends Controller
                 ]
             );
         }
+
+        // Sent after the transaction committed, never inside it.
+        $this->mailer->placed($order);
 
         // Held in the session so the confirmation page can be shown once
         // without exposing every order number to anyone who guesses one.

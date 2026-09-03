@@ -30,6 +30,11 @@
         Dashboard
       </a>
 
+      <a href="{{ route('admin.orders.index') }}" class="item {{ request()->routeIs('admin.orders.*') ? 'on' : '' }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2.5h12l2 5v13a1 1 0 01-1 1H5a1 1 0 01-1-1v-13z"/><path d="M4 7.5h16M9.5 11.5a2.5 2.5 0 005 0"/></svg>
+        Orders
+      </a>
+
       <div class="grp">Catalog</div>
       <a href="{{ route('admin.products.index') }}" class="item {{ request()->routeIs('admin.products.*') ? 'on' : '' }}">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.5 7.5v9l-8.5 4.5-8.5-4.5v-9L12 3z"/><path d="M3.5 7.5L12 12l8.5-4.5M12 12v9"/></svg>

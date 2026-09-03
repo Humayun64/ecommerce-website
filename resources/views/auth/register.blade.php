@@ -1,52 +1,49 @@
-<x-guest-layout>
-    <form method="POST" action="{{ route('register') }}">
-        @csrf
+@extends('site.layouts.app')
+@section('title', __('Create an account') . ' — ' . ($settings['store_name'] ?? 'AMJR Global'))
+@push('head')<meta name="robots" content="noindex">@endpush
 
-        <!-- Name -->
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
-        </div>
+@section('content')
+<x-auth-shell :heading="__('Create your account')" :sub="__('Takes about thirty seconds.')">
 
-        <!-- Email Address -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+  <form method="POST" action="{{ route('register') }}">
+    @csrf
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+    <div class="cofield">
+      <label for="name">{{ __('Full name') }}</label>
+      <input type="text" id="name" name="name" value="{{ old('name') }}" required autofocus autocomplete="name">
+    </div>
 
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
+    <div class="cofield">
+      <label for="phone">{{ __('Mobile number') }}</label>
+      <input type="tel" id="phone" name="phone" value="{{ old('phone') }}" required
+             placeholder="01XXXXXXXXX" autocomplete="tel">
+      <small>{{ __('We use this to link any orders you placed as a guest, and to call before delivery.') }}</small>
+    </div>
 
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
+    <div class="cofield">
+      <label for="email">{{ __('Email') }}</label>
+      <input type="email" id="email" name="email" value="{{ old('email') }}" required autocomplete="username">
+      <small>{{ __('Order confirmations go here.') }}</small>
+    </div>
 
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
+    <div class="corow">
+      <div class="cofield">
+        <label for="password">{{ __('Password') }}</label>
+        <input type="password" id="password" name="password" required autocomplete="new-password">
+      </div>
+      <div class="cofield">
+        <label for="password_confirmation">{{ __('Repeat password') }}</label>
+        <input type="password" id="password_confirmation" name="password_confirmation" required autocomplete="new-password">
+      </div>
+    </div>
 
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
+    <button type="submit" class="btn btn-gold" style="width:100%;height:50px">{{ __('Create account') }}</button>
+  </form>
 
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
+  <p class="authswap">
+    {{ __('Already have an account?') }}
+    <a href="{{ route('login') }}">{{ __('Log in') }}</a>
+  </p>
 
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
-                {{ __('Already registered?') }}
-            </a>
-
-            <x-primary-button class="ms-4">
-                {{ __('Register') }}
-            </x-primary-button>
-        </div>
-    </form>
-</x-guest-layout>
+</x-auth-shell>
+@endsection

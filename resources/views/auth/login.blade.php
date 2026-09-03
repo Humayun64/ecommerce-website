@@ -1,47 +1,41 @@
-<x-guest-layout>
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+@extends('site.layouts.app')
+@section('title', __('Log in') . ' — ' . ($settings['store_name'] ?? 'AMJR Global'))
+@push('head')<meta name="robots" content="noindex">@endpush
 
-    <form method="POST" action="{{ route('login') }}">
-        @csrf
+@section('content')
+<x-auth-shell :heading="__('Welcome back')" :sub="__('Log in to see your orders and check out faster.')">
 
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+  <form method="POST" action="{{ route('login') }}">
+    @csrf
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+    <div class="cofield">
+      <label for="email">{{ __('Email') }}</label>
+      <input type="email" id="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username">
+    </div>
 
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
+    <div class="cofield">
+      <label for="password">{{ __('Password') }}</label>
+      <input type="password" id="password" name="password" required autocomplete="current-password">
+    </div>
 
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
+    <div class="authrow">
+      <label class="fcheck">
+        <input type="checkbox" name="remember">
+        <span>{{ __('Keep me logged in') }}</span>
+      </label>
 
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember_me" class="inline-flex items-center">
-                <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember">
-                <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
-            </label>
-        </div>
+      @if (Route::has('password.request'))
+        <a href="{{ route('password.request') }}" class="authlink">{{ __('Forgot password?') }}</a>
+      @endif
+    </div>
 
-        <div class="flex items-center justify-end mt-4">
-            @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
-                    {{ __('Forgot your password?') }}
-                </a>
-            @endif
+    <button type="submit" class="btn btn-gold" style="width:100%;height:50px">{{ __('Log in') }}</button>
+  </form>
 
-            <x-primary-button class="ms-3">
-                {{ __('Log in') }}
-            </x-primary-button>
-        </div>
-    </form>
-</x-guest-layout>
+  <p class="authswap">
+    {{ __("Don't have an account?") }}
+    <a href="{{ route('register') }}">{{ __('Create one') }}</a>
+  </p>
+
+</x-auth-shell>
+@endsection

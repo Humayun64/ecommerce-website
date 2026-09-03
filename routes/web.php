@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\CartController;
@@ -40,9 +42,20 @@ Route::post('/track', [CheckoutController::class, 'track'])->name('orders.track.
 
 /* ---------- customer account ---------- */
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::middleware('auth')->prefix('account')->name('account.')->group(function () {
+    Route::get('/', [AccountController::class, 'dashboard'])->name('dashboard');
+    Route::get('orders', [AccountController::class, 'orders'])->name('orders');
+    Route::get('orders/{order}', [AccountController::class, 'order'])->name('order');
+    Route::post('claim', [AccountController::class, 'claim'])->name('claim');
+
+    Route::get('addresses', [AccountController::class, 'addresses'])->name('addresses');
+    Route::post('addresses', [AccountController::class, 'storeAddress'])->name('addresses.store');
+    Route::patch('addresses/{address}', [AccountController::class, 'updateAddress'])->name('addresses.update');
+    Route::delete('addresses/{address}', [AccountController::class, 'destroyAddress'])->name('addresses.destroy');
+});
+
+Route::get('/dashboard', fn () => redirect()->route('account.dashboard'))
+    ->middleware(['auth'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -57,6 +70,14 @@ Route::middleware(['auth', 'admin'])
     ->name('admin.')
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+        Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create');
+        Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
+        Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::get('orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
+        Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
+        Route::patch('orders/{order}/delivery', [OrderController::class, 'updateDelivery'])->name('orders.delivery');
 
         Route::resource('categories', CategoryController::class)->except('show');
         Route::resource('brands', BrandController::class)->except('show');

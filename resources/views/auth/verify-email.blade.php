@@ -1,31 +1,24 @@
-<x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
-    </div>
+@extends('site.layouts.app')
+@section('title', __('Verify your email'))
+@push('head')<meta name="robots" content="noindex">@endpush
 
-    @if (session('status') == 'verification-link-sent')
-        <div class="mb-4 font-medium text-sm text-green-600">
-            {{ __('A new verification link has been sent to the email address you provided during registration.') }}
-        </div>
-    @endif
+@section('content')
+<x-auth-shell :heading="__('Check your inbox')"
+              :sub="__('We sent you a verification link. Click it and you are all set.')">
 
-    <div class="mt-4 flex items-center justify-between">
-        <form method="POST" action="{{ route('verification.send') }}">
-            @csrf
+  @if (session('status') === 'verification-link-sent')
+    <div class="authflash">{{ __('A fresh link has been sent to your email address.') }}</div>
+  @endif
 
-            <div>
-                <x-primary-button>
-                    {{ __('Resend Verification Email') }}
-                </x-primary-button>
-            </div>
-        </form>
+  <form method="POST" action="{{ route('verification.send') }}">
+    @csrf
+    <button type="submit" class="btn btn-gold" style="width:100%;height:50px">{{ __('Send it again') }}</button>
+  </form>
 
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
+  <form method="POST" action="{{ route('logout') }}">
+    @csrf
+    <button type="submit" class="authswap" style="width:100%;text-align:center;margin-top:16px">{{ __('Log out') }}</button>
+  </form>
 
-            <button type="submit" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                {{ __('Log Out') }}
-            </button>
-        </form>
-    </div>
-</x-guest-layout>
+</x-auth-shell>
+@endsection
