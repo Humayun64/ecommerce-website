@@ -66,6 +66,10 @@
     if (!form.matches('.quickadd, #addForm')) return;
     if (!window.fetch || !token) return;   // no JS support, normal post
 
+    // Buy now has to post normally so the server can redirect to checkout.
+    var submitter = e.submitter || form.querySelector('[data-buynow]:focus');
+    if (submitter && submitter.name === 'buy_now') return;
+
     e.preventDefault();
     submitAsync(form);
   });

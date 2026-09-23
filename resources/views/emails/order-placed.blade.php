@@ -30,6 +30,14 @@
       <td style="padding:9px 0;font-size:13.5px;color:#5B6270;">{{ __('Subtotal') }}</td>
       <td style="padding:9px 0;text-align:right;font-size:13.5px;">৳{{ number_format($order->subtotal) }}</td>
     </tr>
+    @if ($order->discount > 0)
+      <tr>
+        <td style="padding:2px 0;font-size:13.5px;color:#1B7F4C;">
+          {{ __('Coupon') }}@if ($order->coupon_code) {{ $order->coupon_code }}@endif
+        </td>
+        <td style="padding:2px 0;text-align:right;font-size:13.5px;color:#1B7F4C;">− ৳{{ number_format($order->discount) }}</td>
+      </tr>
+    @endif
     <tr>
       <td style="padding:2px 0;font-size:13.5px;color:#5B6270;">{{ __('Delivery') }} — {{ $order->shipping_zone_name }}</td>
       <td style="padding:2px 0;text-align:right;font-size:13.5px;">

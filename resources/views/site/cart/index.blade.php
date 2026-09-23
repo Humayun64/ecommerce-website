@@ -3,6 +3,21 @@
 
 @section('content')
 
+<style>
+.couponbox{border-top:1px solid var(--line);margin-top:14px;padding-top:16px}
+.couponform label{display:block;font-size:13px;font-weight:600;margin-bottom:8px}
+.couponrow{display:flex;gap:8px}
+.couponrow input{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:3px;padding:10px 12px;font:inherit;font-size:14px;background:#fff;text-transform:uppercase;letter-spacing:.03em}
+.couponrow input:focus{border-color:var(--navy);outline:none}
+.couponrow .btn{height:auto;padding:0 18px;flex-shrink:0}
+.couponon{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#FFFCF5;border:1.5px dashed var(--gold);border-radius:3px;padding:11px 14px}
+.couponcode{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;font-weight:700;letter-spacing:.04em;color:var(--navy)}
+.couponon small{display:block;font-size:12.5px;color:var(--gold-deep);font-weight:600;margin-top:2px}
+.couponremove{font-size:12.5px;color:var(--ink-mute);text-decoration:underline;padding:0}
+.couponremove:hover{color:#B3261E}
+.sumline.saving b{color:var(--ok)}
+</style>
+
 <div class="crumbs"><div class="wrap">
   <a href="{{ route('home') }}">{{ __('Home') }}</a><span>/</span>
   <strong>{{ __('Your cart') }}</strong>
@@ -17,6 +32,10 @@
       <a href="{{ route('shop') }}" class="btn btn-gold">{{ __('Browse products') }}</a>
     </div>
   @else
+
+    @if ($dropped)
+      <div class="warnbox">{{ $dropped }}</div>
+    @endif
 
     @php $problems = $cart->problemLines(); @endphp
     @if ($problems->isNotEmpty())
@@ -81,10 +100,11 @@
           <h2>{{ __('Order summary') }}</h2>
 
           @php
-            $freeOver = (float) ($settings['free_delivery_over'] ?? 2000);
-            $delivery = (float) ($settings['delivery_dhaka'] ?? 60);
-            $qualifies = $cart->subtotal >= $freeOver;
-            $shortfall = max(0, $freeOver - $cart->subtotal);
+            $freeOver  = (float) ($settings['free_delivery_over'] ?? 0);
+            $rate      = (float) $estimate['amount'];
+            $qualifies = $freeShip || $estimate['free'];
+            $delivery  = $qualifies ? 0 : $rate;
+            $shortfall = $freeOver > 0 ? max(0, $freeOver - $cart->subtotal) : 0;
           @endphp
 
           <div class="sumline">
@@ -92,9 +112,16 @@
             <b>৳{{ number_format($cart->subtotal) }}</b>
           </div>
 
+          @if ($discount > 0)
+            <div class="sumline saving">
+              <span>{{ __('Coupon') }} {{ $coupon->code }}</span>
+              <b>− ৳{{ number_format($discount) }}</b>
+            </div>
+          @endif
+
           <div class="sumline">
-            <span>{{ __('Delivery, inside Dhaka') }}</span>
-            <b>{{ $qualifies ? __('Free') : '৳' . number_format($delivery) }}</b>
+            <span>{{ __('Delivery, from') }}</span>
+            <b>{{ $qualifies ? __('Free') : '৳' . number_format($rate) }}</b>
           </div>
 
           @if (! $qualifies && $shortfall > 0)
@@ -105,8 +132,10 @@
 
           <div class="sumtotal">
             <span>{{ __('Estimated total') }}</span>
-            <b>৳{{ number_format($cart->subtotal + ($qualifies ? 0 : $delivery)) }}</b>
+            <b>৳{{ number_format(max(0, $cart->subtotal - $discount + $delivery)) }}</b>
           </div>
+
+          @include('site.partials.coupon-box')
 
           <p class="sumnote">
             {{ __('Delivery is calculated properly at checkout once you enter an address. Cash on delivery available everywhere.') }}

@@ -41,14 +41,31 @@
 
     <div class="panel-body">
       <div class="glance"><span>Subtotal</span><b>৳{{ number_format($order->subtotal) }}</b></div>
+
+      @if ($order->discount > 0)
+        <div class="glance">
+          <span>
+            Discount
+            @if ($order->coupon_code)
+              <span class="badge b-gold" style="margin-left:6px">{{ $order->coupon_code }}</span>
+            @endif
+          </span>
+          <b>− ৳{{ number_format($order->discount) }}</b>
+        </div>
+      @endif
+
       <div class="glance"><span>Delivery — {{ $order->shipping_zone_name ?? 'not set' }}</span>
         <b>{{ $order->delivery_charge > 0 ? '৳' . number_format($order->delivery_charge) : 'Free' }}</b></div>
-      @if ($order->discount > 0)
-        <div class="glance"><span>Discount</span><b>− ৳{{ number_format($order->discount) }}</b></div>
-      @endif
       <div class="glance"><span><strong>Total to collect</strong></span><b style="font-size:19px">৳{{ number_format($order->total) }}</b></div>
+
       @if ($order->profit !== null)
-        <div class="glance"><span>Your profit on this order</span><b>৳{{ number_format($order->profit) }}</b></div>
+        <div class="glance">
+          <span>Your profit on this order</span>
+          <b>৳{{ number_format($order->profit) }}</b>
+        </div>
+        @if ($order->discount > 0)
+          <div class="sub" style="text-align:right;margin-top:-4px">after the ৳{{ number_format($order->discount) }} discount</div>
+        @endif
       @else
         <div class="glance"><span>Profit</span><b class="sub" style="font-size:13px">Some items have no cost set</b></div>
       @endif
@@ -108,7 +125,7 @@
               <option value="{{ $key }}" @selected($order->status === $key)>{{ $label }}</option>
             @endforeach
           </select>
-          <div class="hint">Cancelling or returning puts the stock back automatically.</div>
+          <div class="hint">Cancelling or returning puts the stock back, and gives back any coupon use.</div>
         </div>
         <button type="submit" class="btn btn-gold" style="width:100%">Update status</button>
       </form>
@@ -136,8 +153,75 @@
       </p>
       <div class="glance"><span>Account</span><b style="font-size:13px">{{ $order->user_id ? 'Registered' : 'Guest' }}</b></div>
       <div class="glance"><span>Payment</span><b style="font-size:13px">{{ $order->payment_status === 'paid' ? 'Collected' : 'Pending' }}</b></div>
+      @if ($order->coupon_code)
+        <div class="glance"><span>Coupon used</span><b style="font-size:13px">{{ $order->coupon_code }}</b></div>
+      @endif
+
     </div>
   </div>
+
+  @php($orderPayments = $order->relationLoaded('payments') ? $order->payments : \App\Models\Payment::where('order_id', $order->id)->latest()->get())
+
+  @if ($orderPayments->isNotEmpty())
+    <style>
+      .op-row{border-bottom:1px solid var(--line);padding:13px 0}
+      .op-row:last-child{border-bottom:0}
+      .op-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+      .op-name{font-weight:600}
+      .op-txn{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:13px;font-weight:600;letter-spacing:.3px}
+      .op-meta{color:var(--ink-mute);font-size:12.5px;margin-top:5px;line-height:1.6}
+      .op-pill{display:inline-block;font-size:11.5px;font-weight:700;border-radius:999px;padding:3px 11px}
+      .op-pending{background:#FDF3DC;color:#8A6410}
+      .op-verified{background:#E4F3EA;color:#14663E}
+      .op-rejected{background:#FBE7E4;color:#9E3423}
+    </style>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head">
+        <div>
+          <h2>Payment</h2>
+          <div class="sub">Check the transaction ID in your own app before verifying it.</div>
+        </div>
+        <a href="{{ route('admin.payments.index') }}" class="btn btn-line btn-sm">All payments</a>
+      </div>
+
+      <div class="panel-body">
+        @foreach ($orderPayments as $payment)
+          <div class="op-row">
+            <div class="op-top">
+              <div>
+                <span class="op-name">{{ $payment->method_name }}</span>
+                @if ($payment->transaction_id)
+                  — <span class="op-txn">{{ $payment->transaction_id }}</span>
+                @endif
+              </div>
+              <span class="op-pill op-{{ $payment->status }}">{{ $payment->status_label }}</span>
+            </div>
+
+            <div class="op-meta">
+              ৳{{ number_format($payment->amount) }}
+              @if ($payment->sender_number) · from {{ $payment->sender_number }} @endif
+              · {{ $payment->created_at->format('j M Y, g:i a') }}
+              @if ($payment->verified_at && $payment->status !== 'pending')
+                <br>{{ ucfirst($payment->status) }} by {{ $payment->verifier?->name ?? 'admin' }}
+                on {{ $payment->verified_at->format('j M Y, g:i a') }}
+              @endif
+              @if ($payment->admin_note)<br><em>{{ $payment->admin_note }}</em>@endif
+            </div>
+
+            @if ($payment->status === 'pending')
+              <form method="POST" action="{{ route('admin.payments.update', $payment) }}" style="margin-top:11px;display:flex;gap:8px">
+                @csrf
+                @method('PATCH')
+                <button type="submit" name="action" value="verify" class="btn btn-navy btn-sm">Verify</button>
+                <button type="submit" name="action" value="reject" class="btn btn-line btn-sm">Reject</button>
+              </form>
+            @endif
+          </div>
+        @endforeach
+      </div>
+    </div>
+  @endif
 
 </div>
 </div>

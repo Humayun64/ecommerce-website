@@ -6,6 +6,7 @@ use App\Models\Attribute;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ShippingZone;
 use Illuminate\Http\Request;
 
 class CatalogController extends Controller
@@ -38,17 +39,101 @@ class CatalogController extends Controller
             'brand', 'category.parent', 'images',
             'variants.values.attribute',
             'productAttributes.values',
+            'deliveryTier.rates',
         ]);
+
+        $product->load(['approvedReviews' => fn ($q) => $q->latest()]);
 
         $related = Product::active()
             ->with(['brand', 'primaryImage', 'variants'])
+            ->withCount(['approvedReviews as reviews_count'])
+            ->withAvg(['approvedReviews as reviews_avg_rating'], 'rating')
             ->where('id', '!=', $product->id)
             ->when($product->category_id, fn ($q) => $q->where('category_id', $product->category_id))
             ->inRandomOrder()
             ->take(6)
             ->get();
 
-        return view('site.products.show', compact('product', 'related'));
+        return view('site.products.show', [
+            'product'     => $product,
+            'related'     => $related,
+            'variantData' => $this->variantPayload($product),
+            'strings'     => $this->pickerStrings(),
+            'schema'      => $this->productSchema($product),
+            'reviews'     => $product->approvedReviews,
+            'zones'       => ShippingZone::active()->orderBy('sort_order')->get(),
+        ]);
+    }
+
+    /* ---------- payloads for the product page ---------- */
+
+    /**
+     * Built here rather than inside the Blade template. A multi-line array
+     * or an arrow function inside a Blade directive breaks Blade's argument
+     * parser, so anything non-trivial is prepared before the view sees it.
+     */
+    private function variantPayload(Product $product): array
+    {
+        return $product->variants->map(fn ($variant) => [
+            'id'      => $variant->id,
+            'sku'     => $variant->sku,
+            'price'   => (float) $variant->price,
+            'compare' => $variant->compare_price ? (float) $variant->compare_price : null,
+            'stock'   => (int) $variant->stock,
+            'values'  => $variant->values->pluck('id')->sort()->values()->all(),
+        ])->values()->all();
+    }
+
+    private function pickerStrings(): array
+    {
+        return [
+            'inStock'   => __('In stock'),
+            'lowStock'  => __('Only :n left', ['n' => ':n']),
+            'outStock'  => __('Out of stock'),
+            'choose'    => __('Choose an option to see stock'),
+            'save'      => __('Save'),
+            'soldOut'   => __('Sold out'),
+            'addToCart' => __('Add to cart'),
+        ];
+    }
+
+    private function productSchema(Product $product): array
+    {
+        $schema = [
+            '@context'    => 'https://schema.org',
+            '@type'       => 'Product',
+            'name'        => $product->name,
+            'description' => $product->seo_description,
+            'sku'         => $product->sku,
+            'offers'      => [
+                '@type'         => 'Offer',
+                'price'         => (float) $product->display_price,
+                'priceCurrency' => 'BDT',
+                'availability'  => $product->is_out_of_stock
+                                    ? 'https://schema.org/OutOfStock'
+                                    : 'https://schema.org/InStock',
+                'url'           => route('shop.product', $product),
+            ],
+        ];
+
+        if ($product->brand) {
+            $schema['brand'] = ['@type' => 'Brand', 'name' => $product->brand->name];
+        }
+
+        if ($product->primaryImage) {
+            $schema['image'] = url($product->primaryImage->url);
+        }
+
+        // Google only shows stars in results when the markup backs them up.
+        if ($product->rating_count > 0) {
+            $schema['aggregateRating'] = [
+                '@type'       => 'AggregateRating',
+                'ratingValue' => $product->rating_average,
+                'reviewCount' => $product->rating_count,
+            ];
+        }
+
+        return $schema;
     }
 
     /* ---------- shared listing ---------- */
@@ -57,7 +142,9 @@ class CatalogController extends Controller
     {
         $query = Product::active()
             ->with(['brand', 'primaryImage', 'variants'])
-            ->withMin('variants as min_variant_price', 'price');
+            ->withMin('variants as min_variant_price', 'price')
+            ->withCount(['approvedReviews as reviews_count'])
+            ->withAvg(['approvedReviews as reviews_avg_rating'], 'rating');
 
         // Category, including everything under a parent.
         if ($category) {

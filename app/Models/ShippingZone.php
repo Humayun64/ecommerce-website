@@ -14,4 +14,15 @@ class ShippingZone extends Model
     {
         return $query->where('is_active', true);
     }
+
+    public function rates()
+    {
+        return $this->hasMany(DeliveryRate::class);
+    }
+
+    /** Used when a zone has no rate set for a band yet. */
+    public function getBaseRateAttribute(): float
+    {
+        return (float) $this->rate;
+    }
 }

@@ -7,8 +7,10 @@ use App\Http\Requests\ProductRequest;
 use App\Models\Attribute;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\DeliveryTier;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\ShippingZone;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +23,7 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $products = Product::with(['brand', 'category', 'variants', 'primaryImage'])
+        $products = Product::with(['brand', 'category', 'variants', 'primaryImage', 'deliveryTier'])
             ->when($request->search, fn ($q, $term) => $q->where(fn ($sub) =>
                 $sub->where('name', 'like', "%{$term}%")->orWhere('sku', 'like', "%{$term}%")))
             ->when($request->brand, fn ($q, $id) => $q->where('brand_id', $id))
@@ -127,12 +129,31 @@ class ProductController extends Controller
 
     private function formData(Product $product): array
     {
+        $tiers = DeliveryTier::with('rates')->orderBy('sort_order')->get();
+        $zones = ShippingZone::active()->orderBy('sort_order')->get();
+
+        // [tierId][zoneId] => rate, so the sidebar can show the delivery
+        // cost without a page reload when the band is changed.
+        $rates = [];
+
+        foreach ($tiers as $tier) {
+            foreach ($tier->rates as $rate) {
+                $rates[$tier->id][$rate->shipping_zone_id] = (float) $rate->rate;
+            }
+        }
+
         return [
             'product'       => $product,
             'brands'        => Brand::orderBy('name')->get(),
             'categories'    => Category::with('parent')->orderBy('name')->get()
                                    ->sortBy(fn ($c) => $c->full_name),
             'allAttributes' => Attribute::with('values')->orderBy('sort_order')->get(),
+            'tiers'         => $tiers,
+            'zones'         => $zones,
+            'tierRates'     => [
+                'rates'    => $rates,
+                'fallback' => $tiers->firstWhere('is_default', true)?->id ?? $tiers->first()?->id,
+            ],
         ];
     }
 

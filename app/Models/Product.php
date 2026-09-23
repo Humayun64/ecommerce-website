@@ -12,7 +12,8 @@ class Product extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'category_id', 'brand_id', 'name', 'slug', 'sku', 'type', 'origin',
+        'category_id', 'brand_id', 'delivery_tier_id',
+        'name', 'slug', 'sku', 'type', 'origin',
         'size_label', 'short_description', 'description',
         'price', 'compare_price', 'cost_price',
         'stock', 'low_stock_threshold', 'has_variants',
@@ -51,6 +52,12 @@ class Product extends Model
         return $this->belongsTo(Brand::class);
     }
 
+    /** Which size band this product ships in. */
+    public function deliveryTier()
+    {
+        return $this->belongsTo(DeliveryTier::class, 'delivery_tier_id');
+    }
+
     /** Which axes this product varies on. Named to avoid clashing with Eloquent's own attributes. */
     public function productAttributes()
     {
@@ -72,6 +79,17 @@ class Product extends Model
     public function primaryImage()
     {
         return $this->hasOne(ProductImage::class)->where('is_primary', true);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    /** Only what the public should see. */
+    public function approvedReviews()
+    {
+        return $this->hasMany(Review::class)->where('status', 'approved');
     }
 
     public function scopeActive($query)
@@ -160,6 +178,54 @@ class Product extends Model
         }
 
         return (float) $this->cost_price * $this->stock;
+    }
+
+    /* ---------- ratings ---------- */
+
+    /**
+     * Uses the eager-loaded aggregate when a listing supplied one, so a
+     * grid of products does not fire a query per card.
+     */
+    public function getRatingCountAttribute(): int
+    {
+        if (array_key_exists('reviews_count', $this->attributes)) {
+            return (int) $this->attributes['reviews_count'];
+        }
+
+        return $this->relationLoaded('approvedReviews')
+            ? $this->approvedReviews->count()
+            : $this->approvedReviews()->count();
+    }
+
+    public function getRatingAverageAttribute(): float
+    {
+        if (array_key_exists('reviews_avg_rating', $this->attributes)) {
+            return round((float) $this->attributes['reviews_avg_rating'], 1);
+        }
+
+        $reviews = $this->relationLoaded('approvedReviews')
+            ? $this->approvedReviews
+            : $this->approvedReviews()->get();
+
+        return $reviews->count() ? round($reviews->avg('rating'), 1) : 0.0;
+    }
+
+    /** [5 => 12, 4 => 3, …] for the bar chart beside the score. */
+    public function getRatingBreakdownAttribute(): array
+    {
+        $reviews = $this->relationLoaded('approvedReviews')
+            ? $this->approvedReviews
+            : $this->approvedReviews()->get();
+
+        $counts = array_fill_keys([5, 4, 3, 2, 1], 0);
+
+        foreach ($reviews as $review) {
+            if (isset($counts[$review->rating])) {
+                $counts[$review->rating]++;
+            }
+        }
+
+        return $counts;
     }
 
     /* ---------- seo ---------- */

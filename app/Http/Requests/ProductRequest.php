@@ -20,6 +20,7 @@ class ProductRequest extends FormRequest
             'slug'                => $this->filled('slug') ? $this->slug : null,
             'category_id'         => $this->filled('category_id') ? $this->category_id : null,
             'brand_id'            => $this->filled('brand_id') ? $this->brand_id : null,
+            'delivery_tier_id'    => $this->filled('delivery_tier_id') ? $this->delivery_tier_id : null,
             'compare_price'       => $this->filled('compare_price') ? $this->compare_price : null,
             'cost_price'          => $this->filled('cost_price') ? $this->cost_price : null,
             'stock'               => $this->filled('stock') ? $this->stock : 0,
@@ -37,6 +38,7 @@ class ProductRequest extends FormRequest
             'sku'                 => ['required', 'string', 'max:60', Rule::unique('products')->ignore($product)],
             'category_id'         => ['nullable', 'exists:categories,id'],
             'brand_id'            => ['nullable', 'exists:brands,id'],
+            'delivery_tier_id'    => ['nullable', 'exists:delivery_tiers,id'],
             'type'                => ['required', Rule::in(['physical', 'digital'])],
             'origin'              => ['nullable', 'string', 'max:80'],
             'size_label'          => ['nullable', 'string', 'max:80'],
@@ -77,10 +79,10 @@ class ProductRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'compare_price.gt'      => 'The old price must be higher than the selling price, or leave it empty.',
-            'images.*.max'          => 'Each image must be under 6 MB.',
-            'meta_title.max'        => 'Keep the meta title under 70 characters or Google will cut it off.',
-            'meta_description.max'  => 'Keep the meta description under 180 characters or Google will cut it off.',
+            'compare_price.gt'     => 'The old price must be higher than the selling price, or leave it empty.',
+            'images.*.max'         => 'Each image must be under 6 MB.',
+            'meta_title.max'       => 'Keep the meta title under 70 characters or Google will cut it off.',
+            'meta_description.max' => 'Keep the meta description under 180 characters or Google will cut it off.',
         ];
     }
 }

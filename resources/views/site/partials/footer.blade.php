@@ -1,3 +1,5 @@
+@include('site.partials.blog-strip')
+
 <footer><div class="wrap">
   <div class="fg">
     <div>
@@ -28,28 +30,19 @@
       </ul>
     </div>
 
-    <div>
-      <h4>{{ __('Shop') }}</h4>
-      <ul>
-        @foreach ($navCategories as $parent)
-          @foreach ($parent->children->take(3) as $child)
-            <li><a href="{{ route('shop.category', $child) }}">{{ $child->name }}</a></li>
+    @foreach ([1, 2] as $column)
+      @php $links = ($footerMenu ?? collect())->get($column, collect()); @endphp
+      <div>
+        <h4>{{ $settings['footer_col' . $column . '_title'] ?? ($column === 1 ? __('Shop') : __('Your order')) }}</h4>
+        <ul>
+          @foreach ($links as $item)
+            <li>
+              <a href="{{ $item->href }}" @if ($item->new_tab) target="_blank" rel="noopener" @endif>{{ $item->label }}</a>
+            </li>
           @endforeach
-        @endforeach
-      </ul>
-    </div>
-
-    <div>
-      <h4>{{ __('Your order') }}</h4>
-      <ul>
-        <li><a href="{{ route('orders.track') }}">{{ __('Track a parcel') }}</a></li>
-        <li><a href="#">{{ __('Delivery charges') }}</a></li>
-        <li><a href="#">{{ __('Returns and refunds') }}</a></li>
-        @if (!empty($settings['store_whatsapp']))
-          <li><a href="https://wa.me/{{ $settings['store_whatsapp'] }}" target="_blank" rel="noopener">{{ __('Order on WhatsApp') }}</a></li>
-        @endif
-      </ul>
-    </div>
+        </ul>
+      </div>
+    @endforeach
 
     <div>
       <h4>{{ __('Follow us') }}</h4>
@@ -62,6 +55,9 @@
         @endif
         @if (!empty($settings['youtube_url']))
           <li><a href="{{ $settings['youtube_url'] }}" target="_blank" rel="noopener">{{ __('YouTube') }}</a></li>
+        @endif
+        @if (!empty($settings['store_whatsapp']))
+          <li><a href="https://wa.me/{{ $settings['store_whatsapp'] }}" target="_blank" rel="noopener">{{ __('WhatsApp') }}</a></li>
         @endif
       </ul>
     </div>

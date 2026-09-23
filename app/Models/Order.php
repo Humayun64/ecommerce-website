@@ -10,22 +10,23 @@ class Order extends Model
         'order_number', 'user_id',
         'customer_name', 'customer_phone', 'customer_email',
         'shipping_address', 'shipping_area', 'shipping_zone_id', 'shipping_zone_name',
-        'subtotal', 'delivery_charge', 'discount', 'total', 'cost_total',
+        'subtotal', 'delivery_charge', 'discount', 'coupon_id', 'coupon_code',
+        'total', 'cost_total',
         'payment_method', 'payment_status', 'status',
         'customer_note', 'admin_note', 'courier', 'tracking_number',
         'confirmed_at', 'shipped_at', 'delivered_at', 'cancelled_at',
     ];
 
     protected $casts = [
-        'subtotal'       => 'decimal:2',
-        'delivery_charge'=> 'decimal:2',
-        'discount'       => 'decimal:2',
-        'total'          => 'decimal:2',
-        'cost_total'     => 'decimal:2',
-        'confirmed_at'   => 'datetime',
-        'shipped_at'     => 'datetime',
-        'delivered_at'   => 'datetime',
-        'cancelled_at'   => 'datetime',
+        'subtotal'        => 'decimal:2',
+        'delivery_charge' => 'decimal:2',
+        'discount'        => 'decimal:2',
+        'total'           => 'decimal:2',
+        'cost_total'      => 'decimal:2',
+        'confirmed_at'    => 'datetime',
+        'shipped_at'      => 'datetime',
+        'delivered_at'    => 'datetime',
+        'cancelled_at'    => 'datetime',
     ];
 
     public const STATUSES = [
@@ -53,6 +54,16 @@ class Order extends Model
         return $this->belongsTo(ShippingZone::class, 'shipping_zone_id');
     }
 
+    public function coupon()
+    {
+        return $this->belongsTo(Coupon::class);
+    }
+
+    public function couponUsage()
+    {
+        return $this->hasOne(CouponUsage::class);
+    }
+
     public function getStatusLabelAttribute(): string
     {
         return self::STATUSES[$this->status] ?? ucfirst($this->status);
@@ -63,11 +74,15 @@ class Order extends Model
         return ! in_array($this->status, ['delivered', 'cancelled', 'returned']);
     }
 
-    /** Gross profit on this order, from the cost snapshot taken at purchase. */
+    /**
+     * Gross profit from the cost snapshot taken at purchase.
+     * The discount comes off the profit, not the customer's goodwill —
+     * a coupon is money you gave away, so it belongs here.
+     */
     public function getProfitAttribute(): ?float
     {
         return $this->cost_total === null
             ? null
-            : (float) $this->subtotal - (float) $this->cost_total;
+            : (float) $this->subtotal - (float) $this->cost_total - (float) $this->discount;
     }
 }

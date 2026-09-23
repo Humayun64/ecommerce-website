@@ -378,6 +378,42 @@
     </div>
   </div>
 
+  {{-- ---------- delivery size ---------- --}}
+  <div class="panel">
+    <div class="panel-head"><h2>Delivery size</h2></div>
+    <div class="panel-body">
+      @if ($tiers->isEmpty())
+        <p class="sub" style="margin:0 0 12px">No size bands exist yet.</p>
+        <a href="{{ route('admin.delivery.index') }}" class="btn btn-line btn-sm" style="width:100%">Set them up</a>
+      @else
+        <div class="field" style="margin-bottom:10px">
+          <select name="delivery_tier_id" id="delivery_tier_id">
+            @php $defaultTier = $tiers->firstWhere('is_default', true); @endphp
+            <option value="">
+              Use the default{{ $defaultTier ? ' — ' . $defaultTier->name : '' }}
+            </option>
+            @foreach ($tiers as $tier)
+              <option value="{{ $tier->id }}" @selected(old('delivery_tier_id', $product->delivery_tier_id) == $tier->id)>
+                {{ $tier->icon }} {{ $tier->name }}
+              </option>
+            @endforeach
+          </select>
+          <div class="hint">How big the parcel is. This decides what delivery costs.</div>
+        </div>
+
+        <table class="dl-mini">
+          @foreach ($zones as $zone)
+            <tr>
+              <td>{{ $zone->name }}</td>
+              <td data-zone="{{ $zone->id }}" data-base="{{ (int) $zone->rate }}">—</td>
+            </tr>
+          @endforeach
+        </table>
+        <div class="hint" style="margin-top:8px">What this product costs to send, before any free-delivery offer.</div>
+      @endif
+    </div>
+  </div>
+
   <div class="panel">
     <div class="panel-head"><h2>Type</h2></div>
     <div class="panel-body">
@@ -405,6 +441,39 @@
 
 </div>
 </div>
+
+<style>
+.dl-mini{width:100%;border-collapse:collapse;margin-top:4px}
+.dl-mini td{padding:7px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink-mute)}
+.dl-mini tr:last-child td{border-bottom:0}
+.dl-mini td:last-child{text-align:right;font-family:var(--display);font-variation-settings:"wdth" 110;font-weight:700;color:var(--navy)}
+</style>
+
+<script id="tierRates" type="application/json">{!! json_encode($tierRates ?? []) !!}</script>
+<script>
+/* Shows what this product costs to deliver, updating as the band changes. */
+(function () {
+  var el = document.getElementById('tierRates');
+  var select = document.getElementById('delivery_tier_id');
+  if (!el || !select) return;
+
+  var data = JSON.parse(el.textContent || '{}');
+
+  function paint() {
+    var tier = select.value || data.fallback;
+    var rates = (data.rates && data.rates[tier]) || {};
+
+    document.querySelectorAll('.dl-mini td[data-zone]').forEach(function (cell) {
+      var rate = rates[cell.dataset.zone];
+      if (rate === undefined || rate === null) rate = cell.dataset.base;
+      cell.textContent = '\u09F3' + Number(rate).toLocaleString('en-IN');
+    });
+  }
+
+  select.addEventListener('change', paint);
+  paint();
+})();
+</script>
 
 <template id="variantTemplate">
   <tr data-key="__key__">

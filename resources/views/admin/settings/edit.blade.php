@@ -109,46 +109,6 @@
     </div>
 
     <div class="panel">
-      <div class="panel-head"><h2>Delivery charges</h2></div>
-      <div class="panel-body">
-        <div class="note" style="margin-bottom:16px">
-          These are display-only for now. Checkout will calculate from real shipping zones in Batch 9 —
-          keep the two in step until then.
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label for="delivery_dhaka">Inside Dhaka city (৳)</label>
-            <input type="number" step="1" min="0" id="delivery_dhaka" name="delivery_dhaka" value="{{ old('delivery_dhaka', $settings['delivery_dhaka'] ?? '') }}">
-          </div>
-          <div class="field">
-            <label for="delivery_suburb">Dhaka sub-district (৳)</label>
-            <input type="number" step="1" min="0" id="delivery_suburb" name="delivery_suburb" value="{{ old('delivery_suburb', $settings['delivery_suburb'] ?? '') }}">
-          </div>
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label for="delivery_city">Divisional cities (৳)</label>
-            <input type="number" step="1" min="0" id="delivery_city" name="delivery_city" value="{{ old('delivery_city', $settings['delivery_city'] ?? '') }}">
-          </div>
-          <div class="field">
-            <label for="delivery_outside">Rest of Bangladesh (৳)</label>
-            <input type="number" step="1" min="0" id="delivery_outside" name="delivery_outside" value="{{ old('delivery_outside', $settings['delivery_outside'] ?? '') }}">
-          </div>
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label for="free_delivery_over">Free delivery above (৳)</label>
-            <input type="number" step="1" min="0" id="free_delivery_over" name="free_delivery_over" value="{{ old('free_delivery_over', $settings['free_delivery_over'] ?? '') }}">
-          </div>
-          <div class="field">
-            <label for="return_days">Return window (days)</label>
-            <input type="number" step="1" min="0" max="90" id="return_days" name="return_days" value="{{ old('return_days', $settings['return_days'] ?? '') }}">
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel">
       <div class="panel-head"><h2>Social and search</h2></div>
       <div class="panel-body">
         <div class="field">
@@ -191,6 +151,46 @@
         <p class="sub" style="margin:14px 0 0">
           Settings are cached, so saving clears the cache automatically. No artisan command needed.
         </p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Returns</h2></div>
+      <div class="panel-body">
+        <div class="field">
+          <label for="return_days">Return window (days)</label>
+          <input type="number" step="1" min="0" max="90" id="return_days" name="return_days" value="{{ old('return_days', $settings['return_days'] ?? 7) }}">
+          <div class="hint">
+            Counted from the day the order is marked delivered. This is the number shown on the
+            product page and in the footer, and the one the return form actually enforces — change
+            it here and both move together.
+          </div>
+        </div>
+
+        <div class="field" style="margin:0">
+          <label style="display:flex;align-items:flex-start;gap:9px;font-weight:400">
+            <input type="hidden" name="returns_enabled" value="0">
+            <input type="checkbox" name="returns_enabled" value="1" style="margin-top:3px"
+                   @checked(old('returns_enabled', $settings['returns_enabled'] ?? '1') == '1')>
+            <span>
+              <b style="display:block;font-weight:600">Accept return requests</b>
+              <span class="hint" style="margin:2px 0 0">
+                Turn this off during Eid or a stock move and the form tells customers to call
+                instead. Returns already open are not affected.
+              </span>
+            </span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Delivery charges</h2></div>
+      <div class="panel-body">
+        <p class="sub" style="margin:0 0 12px">
+          Rates now live on their own page, set per product size and per area.
+        </p>
+        <a href="{{ route('admin.delivery.index') }}" class="btn btn-navy" style="width:100%">Open delivery charges</a>
       </div>
     </div>
   </div>

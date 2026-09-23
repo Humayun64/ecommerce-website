@@ -36,6 +36,14 @@
       </div>
 
       <div class="sumline"><span>{{ __('Subtotal') }}</span><b>৳{{ number_format($order->subtotal) }}</b></div>
+
+      @if ($order->discount > 0)
+        <div class="sumline">
+          <span>{{ __('Coupon') }}@if ($order->coupon_code) {{ $order->coupon_code }}@endif</span>
+          <b style="color:var(--ok)">− ৳{{ number_format($order->discount) }}</b>
+        </div>
+      @endif
+
       <div class="sumline"><span>{{ __('Delivery') }} — {{ $order->shipping_zone_name }}</span>
         <b>{{ $order->delivery_charge > 0 ? '৳' . number_format($order->delivery_charge) : __('Free') }}</b></div>
       <div class="sumtotal"><span>{{ __('Pay on delivery') }}</span><b>৳{{ number_format($order->total) }}</b></div>

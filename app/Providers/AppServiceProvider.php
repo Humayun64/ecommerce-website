@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
-use App\Models\Category;
+use App\Models\MenuItem;
+use App\Models\Post;
+use App\Models\Payment;
+use App\Models\ReturnRequest;
 use App\Models\Setting;
 use App\Services\CartService;
 use Illuminate\Auth\Events\Login;
@@ -23,25 +26,42 @@ class AppServiceProvider extends ServiceProvider
         // Store settings are needed by nearly every view, so share them once.
         View::share('settings', Setting::all_cached());
 
-        // Storefront nav and the cart badge.
+        // Menus and the cart badge, on every storefront page.
         View::composer('site.*', function ($view) {
-            $categories = [];
-            $cartCount  = 0;
+            $header = collect();
+            $footer = collect();
+            $cartCount = 0;
 
-            if (Schema::hasTable('categories')) {
-                $categories = Category::active()
-                    ->roots()
-                    ->with(['children' => fn ($q) => $q->where('is_active', true)])
-                    ->orderBy('sort_order')
-                    ->get();
+            if (Schema::hasTable('menu_items')) {
+                $menu = MenuItem::active()->orderBy('column')->orderBy('sort_order')->get();
+                $header = $menu->where('location', 'header')->values();
+                $footer = $menu->where('location', 'footer')->groupBy('column');
             }
 
             if (Schema::hasTable('carts')) {
                 $cartCount = app(CartService::class)->count();
             }
 
-            $view->with('navCategories', $categories)
+            // Three most recent posts for the strip above the footer.
+            $latestPosts = Schema::hasTable('posts')
+                ? Post::live()->latest('published_at')->take(3)->get()
+                : collect();
+
+            $view->with('headerMenu', $header)
+                 ->with('footerMenu', $footer)
+                 ->with('latestPosts', $latestPosts)
                  ->with('cartCount', $cartCount);
+        });
+
+        // The badge on the admin sidebar: returns still waiting on a decision.
+        View::composer('admin.*', function ($view) {
+            $view->with('pendingReturns', Schema::hasTable('return_requests')
+                ? ReturnRequest::where('status', 'pending')->count()
+                : 0);
+
+            $view->with('pendingPayments', Schema::hasTable('payments')
+                ? Payment::where('status', 'pending')->count()
+                : 0);
         });
 
         // A guest who adds to the cart then logs in keeps what they picked.
