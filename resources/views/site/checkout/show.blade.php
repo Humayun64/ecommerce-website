@@ -327,6 +327,20 @@
 @endphp
 
 @push('scripts')
+<script id="amjrEvent" type="application/json">{!! json_encode([
+  'event'    => 'InitiateCheckout',
+  'ids'      => $cart->items->map(fn ($i) => (string) ($i->product?->sku ?: $i->product_id))->values(),
+  'value'    => (float) $cart->subtotal,
+  'currency' => 'BDT',
+  'quantity' => (int) $cart->items->sum('quantity'),
+  'items'    => $cart->items->map(fn ($i) => [
+    'item_id'   => (string) ($i->product?->sku ?: $i->product_id),
+    'item_name' => $i->product?->name,
+    'price'     => (float) $i->unit_price,
+    'quantity'  => (int) $i->quantity,
+  ])->values(),
+], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>
+
 <script id="checkoutData" type="application/json">{!! json_encode($checkoutData) !!}</script>
 <script src="{{ asset('js/checkout.js') }}"></script>
 <script src="{{ asset('js/payment-picker.js') }}"></script>

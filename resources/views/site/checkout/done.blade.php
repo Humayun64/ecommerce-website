@@ -71,3 +71,22 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script id="amjrEvent" type="application/json">{!! json_encode([
+  'event'    => 'Purchase',
+  'order'    => $order->order_number,
+  'ids'      => $order->items->map(fn ($i) => (string) ($i->sku ?: $i->product_id))->values(),
+  'value'    => (float) $order->total,
+  'currency' => 'BDT',
+  'quantity' => (int) $order->items->sum('quantity'),
+  'shipping' => (float) $order->delivery_charge,
+  'coupon'   => $order->coupon_code,
+  'items'    => $order->items->map(fn ($i) => [
+    'item_id'   => (string) ($i->sku ?: $i->product_id),
+    'item_name' => $i->name,
+    'price'     => (float) $i->unit_price,
+    'quantity'  => (int) $i->quantity,
+  ])->values(),
+], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>
+@endpush

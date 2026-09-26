@@ -103,6 +103,23 @@
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1.5" y="6" width="13" height="11" rx="1.5"/><path d="M14.5 10h4l3 3.2V17h-7z"/><circle cx="6" cy="18.5" r="1.8"/><circle cx="17.5" cy="18.5" r="1.8"/></svg>
         Delivery
       </a>
+      <a href="{{ route('admin.messages.index') }}" class="item {{ request()->routeIs('admin.messages.*') ? 'on' : '' }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="M3 6.5l9 6 9-6"/></svg>
+        Messages
+        @if (($unreadMessages ?? 0) > 0)<span class="side-tag">{{ $unreadMessages }}</span>@endif
+      </a>
+      <a href="{{ route('admin.contact.edit') }}" class="item {{ request()->routeIs('admin.contact.*') ? 'on' : '' }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3.5" width="18" height="17" rx="2"/><circle cx="12" cy="10" r="2.6"/><path d="M7.5 17a4.6 4.6 0 019 0"/></svg>
+        Contact page
+      </a>
+      <a href="{{ route('admin.sms.index') }}" class="item {{ request()->routeIs('admin.sms.*') ? 'on' : '' }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8 8 0 01-11.6 7.1L4 20.5l1.9-5A8 8 0 1121 11.5z"/><path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01"/></svg>
+        SMS
+      </a>
+      <a href="{{ route('admin.marketing.index') }}" class="item {{ request()->routeIs('admin.marketing.*') ? 'on' : '' }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 10.5v3a1 1 0 001 1h2.5l5 4V5.5l-5 4H4a1 1 0 00-1 1z"/><path d="M16 9.5a4 4 0 010 5M18.8 6.8a8 8 0 010 10.4"/></svg>
+        Marketing &amp; Ads
+      </a>
       <a href="{{ route('admin.payment-methods.index') }}" class="item {{ request()->routeIs('admin.payment-methods.*') ? 'on' : '' }}">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="12" r="2.2"/><path d="M13 10h5M13 14h5"/></svg>
         Payment methods

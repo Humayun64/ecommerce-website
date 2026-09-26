@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
+use App\Http\Controllers\Admin\ContactController as AdminContactController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\BlogCategoryController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -12,6 +13,8 @@ use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\DeliveryController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
+use App\Http\Controllers\Admin\MarketingController;
+use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\PostController as AdminPostController;
@@ -19,16 +22,20 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReturnController as AdminReturnController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\SmsController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CouponController;
+use App\Http\Controllers\FeedController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
 
 /* ---------- storefront ---------- */
@@ -65,6 +72,23 @@ Route::get('/order/{number}/confirmed', [CheckoutController::class, 'done'])->na
 Route::get('/track', [CheckoutController::class, 'trackForm'])->name('orders.track');
 Route::post('/track', [CheckoutController::class, 'track'])->name('orders.track.submit');
 
+/* ---------- contact ---------- */
+
+Route::get('/contact', [ContactController::class, 'show'])->name('contact');
+Route::post('/contact', [ContactController::class, 'store'])
+    ->middleware('throttle:6,1')
+    ->name('contact.store');
+
+/* ---------- what search engines read ---------- */
+
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
+
+/* ---------- product feeds for Facebook and Google ---------- */
+
+Route::get('/feed/facebook.xml', [FeedController::class, 'facebook'])->name('feeds.facebook');
+Route::get('/feed/google.xml', [FeedController::class, 'google'])->name('feeds.google');
+
 /* ---------- returns (works for guests too, once they have tracked the order) ---------- */
 
 Route::get('/returns/{order}/new', [ReturnController::class, 'create'])->name('returns.create');
@@ -97,8 +121,14 @@ Route::middleware('auth')->group(function () {
 
 /* ---------- admin ---------- */
 
+/*
+ | The panel's address comes from ADMIN_PATH in .env. Every link is built
+ | from a route name, so changing it moves the whole panel at once and the
+ | old address simply stops existing -- it is not redirected, because a
+ | redirect would hand the new address straight to the bot that asked.
+ */
 Route::middleware(['auth', 'admin'])
-    ->prefix('admin')
+    ->prefix(config('admin.path'))
     ->name('admin.')
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -144,6 +174,24 @@ Route::middleware(['auth', 'admin'])
             Route::delete('zones/{zone}', [DeliveryController::class, 'destroyZone'])->name('zones.destroy');
         });
 
+        Route::get('messages', [MessageController::class, 'index'])->name('messages.index');
+        Route::get('messages/{message}', [MessageController::class, 'show'])->name('messages.show');
+        Route::patch('messages/{message}', [MessageController::class, 'update'])->name('messages.update');
+        Route::delete('messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');
+
+        Route::get('contact-page', [AdminContactController::class, 'edit'])->name('contact.edit');
+        Route::patch('contact-page', [AdminContactController::class, 'update'])->name('contact.update');
+
+        Route::get('sms', [SmsController::class, 'index'])->name('sms.index');
+        Route::patch('sms/gateway', [SmsController::class, 'updateGateway'])->name('sms.gateway');
+        Route::patch('sms/templates', [SmsController::class, 'updateTemplates'])->name('sms.templates');
+        Route::post('sms/test', [SmsController::class, 'test'])->name('sms.test');
+
+        Route::get('marketing', [MarketingController::class, 'index'])->name('marketing.index');
+        Route::patch('marketing/codes', [MarketingController::class, 'updateCodes'])->name('marketing.codes');
+        Route::patch('marketing/feeds', [MarketingController::class, 'updateFeeds'])->name('marketing.feeds');
+        Route::post('marketing/refresh', [MarketingController::class, 'refreshFeeds'])->name('marketing.refresh');
+
         Route::get('payments', [AdminPaymentController::class, 'index'])->name('payments.index');
         Route::patch('payments/{payment}', [AdminPaymentController::class, 'update'])->name('payments.update');
 
@@ -174,6 +222,17 @@ Route::middleware(['auth', 'admin'])
     });
 
 require __DIR__.'/auth.php';
+
+/*
+ | A login page at the panel's own address, so your bookmark is one link.
+ | It is the same form customers use -- a shop cannot hide /login, because
+ | customers sign in there too. What this hides is the panel.
+ */
+if (class_exists(\App\Http\Controllers\Auth\AuthenticatedSessionController::class)) {
+    Route::get(config('admin.path') . '/login', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'create'])
+        ->middleware('guest')
+        ->name('admin.login');
+}
 
 /* ---------- CMS pages ----------
  | Registered last on purpose: this matches any single-segment path that

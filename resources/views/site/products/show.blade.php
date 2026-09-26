@@ -386,6 +386,21 @@
 
 @push('scripts')
 <script id="variantData" type="application/json">{!! json_encode($variantData) !!}</script>
+<script id="amjrEvent" type="application/json">{!! json_encode([
+  'event'    => 'ViewContent',
+  'ids'      => [(string) ($product->sku ?: $product->id)],
+  'name'     => $product->name,
+  'value'    => (float) $product->price,
+  'currency' => 'BDT',
+  'items'    => [[
+    'item_id'   => (string) ($product->sku ?: $product->id),
+    'item_name' => $product->name,
+    'item_brand'=> $product->brand?->name,
+    'price'     => (float) $product->price,
+    'quantity'  => 1,
+  ]],
+], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>
+
 <script id="pdpStrings" type="application/json">{!! json_encode($strings) !!}</script>
 <script src="{{ asset('js/product-page.js') }}"></script>
 <script src="{{ asset('js/cart.js') }}"></script>

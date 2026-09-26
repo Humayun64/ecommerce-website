@@ -1,0 +1,96 @@
+/* Contact page. Namespaced ct- so nothing here reaches the rest of the site. */
+
+.ct-hero{
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy-deep) 100%);
+  color:#fff;padding:46px 0 42px;position:relative;overflow:hidden;
+}
+.ct-hero::after{
+  content:"";position:absolute;right:-90px;top:-90px;width:300px;height:300px;
+  border-radius:50%;background:radial-gradient(circle,rgba(223,163,39,.22),transparent 68%);
+}
+.ct-hero h1{
+  font-family:var(--display);font-variation-settings:"wdth" 108;
+  font-weight:800;font-size:clamp(28px,4.4vw,40px);line-height:1.1;margin:0 0 10px;
+}
+.ct-hero p{margin:0;max-width:600px;color:#C5CEDD;font-size:15.5px;line-height:1.65}
+
+.ct-wrap{max-width:1100px;margin:0 auto;padding:34px 16px 64px}
+.ct-grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:22px;align-items:start}
+@media(max-width:940px){.ct-grid{grid-template-columns:1fr}}
+
+.ct-card{
+  background:#fff;border:1px solid var(--line);border-radius:16px;
+  padding:24px;box-shadow:0 1px 2px rgba(20,48,90,.04);
+}
+.ct-card + .ct-card{margin-top:18px}
+.ct-card h2{
+  font-family:var(--display);font-variation-settings:"wdth" 106;
+  font-weight:700;font-size:19px;color:var(--ink);margin:0 0 5px;
+}
+.ct-card .lede{color:var(--ink-mute);font-size:13.5px;line-height:1.6;margin:0 0 20px}
+
+/* ---- the form ---- */
+.ct-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:600px){.ct-row{grid-template-columns:1fr}}
+.ct-f{margin-bottom:15px}
+.ct-f label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.ct-f label i{color:var(--bad);font-style:normal}
+.ct-f input,.ct-f select,.ct-f textarea{
+  width:100%;font:inherit;font-size:14.5px;padding:11px 13px;background:#fff;
+  border:1.5px solid var(--line);border-radius:11px;outline:0;
+  transition:border-color .15s ease;
+}
+.ct-f input:focus,.ct-f select:focus,.ct-f textarea:focus{border-color:var(--navy)}
+.ct-f textarea{resize:vertical;min-height:130px;line-height:1.6}
+.ct-f .hint{color:var(--ink-mute);font-size:12px;margin-top:6px;line-height:1.5}
+.ct-err{color:var(--bad);font-size:12.5px;margin-top:6px}
+
+/* The honeypot. Hidden from people, left in the DOM for bots to fill in. */
+.ct-hp{position:absolute!important;left:-9999px!important;width:1px;height:1px;overflow:hidden}
+
+.ct-sent{
+  background:#E4F3EA;border:1px solid #BFE0CD;color:#14663E;
+  border-radius:14px;padding:20px 22px;line-height:1.65;
+}
+.ct-sent b{display:block;font-size:17px;margin-bottom:5px}
+.ct-sent span{font-size:14px}
+.ct-off{
+  background:#FDF3DC;border:1px solid #EBD79B;color:#7A5A0E;
+  border-radius:14px;padding:18px 20px;font-size:14px;line-height:1.65;
+}
+
+/* ---- the details column ---- */
+.ct-ways{display:grid;gap:2px}
+.ct-way{
+  display:flex;align-items:flex-start;gap:13px;padding:14px 0;
+  border-bottom:1px solid var(--line);text-decoration:none;color:inherit;
+}
+.ct-way:last-child{border-bottom:0}
+.ct-way .ic{
+  width:36px;height:36px;border-radius:10px;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--paper);color:var(--navy);
+}
+.ct-way b{display:block;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-mute)}
+.ct-way span{display:block;font-size:15px;font-weight:600;margin-top:3px;line-height:1.45;word-break:break-word}
+a.ct-way:hover span{color:var(--navy);text-decoration:underline}
+.ct-way.wa .ic{background:#E4F3EA;color:#128C7E}
+
+.ct-hours{display:grid;gap:0}
+.ct-hour{
+  display:flex;justify-content:space-between;gap:12px;
+  padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px;
+}
+.ct-hour:last-child{border-bottom:0}
+.ct-hour b{font-weight:600}
+.ct-hour span{color:var(--ink-mute);text-align:right}
+
+.ct-map{border-radius:14px;overflow:hidden;border:1px solid var(--line);margin-top:18px;line-height:0}
+.ct-map iframe{width:100%;height:280px;border:0;display:block}
+
+.ct-quick{
+  background:var(--paper);border-radius:12px;padding:15px 16px;margin-top:16px;
+  font-size:13px;color:var(--ink-mute);line-height:1.65;
+}
+.ct-quick b{display:block;color:var(--ink);font-size:13.5px;margin-bottom:3px}
+.ct-quick a{color:var(--navy);font-weight:600}
