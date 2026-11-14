@@ -13,6 +13,7 @@ use App\Services\OrderMailer;
 use App\Services\OrderService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
 class CheckoutController extends Controller
@@ -179,6 +180,25 @@ class CheckoutController extends Controller
             $phone = '0' . substr($phone, 3);
         }
 
+        // An order number has only a few thousand possibilities per day,
+        // so without a limit someone who knows a customer's phone could
+        // simply try them all. Wrong guesses are counted per phone and per
+        // visitor; a correct lookup costs nothing.
+        $limits = [
+            'track-phone:' . $phone        => 8,
+            'track-ip:' . $request->ip()   => 20,
+        ];
+
+        foreach ($limits as $key => $max) {
+            if (RateLimiter::tooManyAttempts($key, $max)) {
+                throw ValidationException::withMessages([
+                    'order_number' => __('Too many attempts. Please try again in :m minutes, or call us.', [
+                        'm' => (int) ceil(RateLimiter::availableIn($key) / 60),
+                    ]),
+                ]);
+            }
+        }
+
         // Both the number and the phone must match, so an order number
         // alone is not enough to read someone else's details.
         $order = Order::with('items')
@@ -189,6 +209,12 @@ class CheckoutController extends Controller
         // Knowing the number AND the phone is how a guest proves the order is
         // theirs. Remember it for this session so they can open a return
         // without having to make an account first.
+        if (! $order) {
+            foreach ($limits as $key => $max) {
+                RateLimiter::hit($key, 1800);
+            }
+        }
+
         if ($order) {
             $seen = session('tracked_orders', []);
             $seen[] = $order->id;

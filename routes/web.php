@@ -46,7 +46,9 @@ Route::get('/shop', [CatalogController::class, 'index'])->name('shop');
 Route::get('/category/{category:slug}', [CatalogController::class, 'category'])->name('shop.category');
 Route::get('/brand/{brand:slug}', [CatalogController::class, 'brand'])->name('shop.brand');
 Route::get('/product/{product:slug}', [CatalogController::class, 'show'])->name('shop.product');
-Route::post('/product/{product:slug}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+Route::post('/product/{product:slug}/reviews', [ReviewController::class, 'store'])
+    ->middleware('throttle:5,10')
+    ->name('reviews.store');
 
 /* ---------- blog ---------- */
 
@@ -60,13 +62,17 @@ Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
 Route::patch('/cart/{item}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/{item}', [CartController::class, 'destroy'])->name('cart.destroy');
 
-Route::post('/coupon', [CouponController::class, 'store'])->name('coupon.store');
+Route::post('/coupon', [CouponController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('coupon.store');
 Route::delete('/coupon', [CouponController::class, 'destroy'])->name('coupon.destroy');
 
 /* ---------- checkout ---------- */
 
 Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
-Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+Route::post('/checkout', [CheckoutController::class, 'store'])
+    ->middleware('throttle:8,1')
+    ->name('checkout.store');
 Route::get('/order/{number}/confirmed', [CheckoutController::class, 'done'])->name('checkout.done');
 
 Route::get('/track', [CheckoutController::class, 'trackForm'])->name('orders.track');
@@ -92,7 +98,9 @@ Route::get('/feed/google.xml', [FeedController::class, 'google'])->name('feeds.g
 /* ---------- returns (works for guests too, once they have tracked the order) ---------- */
 
 Route::get('/returns/{order}/new', [ReturnController::class, 'create'])->name('returns.create');
-Route::post('/returns/{order}', [ReturnController::class, 'store'])->name('returns.store');
+Route::post('/returns/{order}', [ReturnController::class, 'store'])
+    ->middleware('throttle:6,1')
+    ->name('returns.store');
 Route::get('/returns/{return}/sent', [ReturnController::class, 'done'])->name('returns.done');
 
 /* ---------- customer account ---------- */
@@ -101,7 +109,7 @@ Route::middleware('auth')->prefix('account')->name('account.')->group(function (
     Route::get('/', [AccountController::class, 'dashboard'])->name('dashboard');
     Route::get('orders', [AccountController::class, 'orders'])->name('orders');
     Route::get('orders/{order}', [AccountController::class, 'order'])->name('order');
-    Route::post('claim', [AccountController::class, 'claim'])->name('claim');
+    Route::post('claim', [AccountController::class, 'claim'])->middleware('throttle:5,10')->name('claim');
     Route::get('returns', [ReturnController::class, 'mine'])->name('returns');
 
     Route::get('addresses', [AccountController::class, 'addresses'])->name('addresses');

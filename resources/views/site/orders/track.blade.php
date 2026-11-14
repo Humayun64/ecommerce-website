@@ -60,6 +60,10 @@
     </form>
   </div>
 
+  @error('order_number')
+    <div class="warnbox bad" style="margin-top:18px">{{ $message }}</div>
+  @enderror
+
   @if ($searched && ! $order)
     <div class="warnbox bad" style="margin-top:18px">
       {{ __('No order matched that number and phone. Check both and try again.') }}

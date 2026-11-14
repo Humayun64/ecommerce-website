@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -54,14 +53,10 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        // Anything they ordered as a guest on this number becomes theirs.
-        $claimed = Order::whereNull('user_id')
-            ->where('customer_phone', $user->phone)
-            ->update(['user_id' => $user->id]);
-
+        // Guest orders on this number are NOT attached here: the phone is
+        // unverified, so they are claimed from the account page with an
+        // order number as proof.
         return redirect(route('account.dashboard', absolute: false))
-            ->with('status', $claimed
-                ? __('Welcome. We found :n past order(s) on your number and added them.', ['n' => $claimed])
-                : __('Welcome to :store.', ['store' => config('app.name')]));
+            ->with('status', __('Welcome to :store.', ['store' => config('app.name')]));
     }
 }

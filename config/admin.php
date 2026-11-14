@@ -17,4 +17,18 @@ return [
 
     'path' => trim((string) env('ADMIN_PATH', 'admin'), '/') ?: 'admin',
 
+    /*
+    |--------------------------------------------------------------------------
+    | The first admin account
+    |--------------------------------------------------------------------------
+    |
+    | Only read by `php artisan db:seed`, and only when no account with this
+    | email exists yet. Kept in .env so no password is ever written in code.
+    |
+    */
+
+    'name'     => env('ADMIN_NAME'),
+    'email'    => env('ADMIN_EMAIL'),
+    'password' => env('ADMIN_PASSWORD'),
+
 ];

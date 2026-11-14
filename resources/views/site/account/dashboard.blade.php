@@ -15,15 +15,15 @@
       <a href="{{ route('shop') }}" class="btn btn-gold">{{ __('Shop now') }}</a>
     </div>
 
-    @if ($unclaimed > 0)
-      <div class="warnbox" style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">
-        <span>{{ __('We found :n order(s) placed as a guest on your number.', ['n' => $unclaimed]) }}</span>
-        <form method="POST" action="{{ route('account.claim') }}">
-          @csrf
-          <button type="submit" class="btn btn-navy btn-sm">{{ __('Add them to my account') }}</button>
-        </form>
+    <form method="POST" action="{{ route('account.claim') }}" class="claimbox">
+      @csrf
+      <label for="claim_order">{{ __('Ordered as a guest before? Enter one of your order numbers to add those orders here.') }}</label>
+      <div class="claimrow">
+        <input type="text" id="claim_order" name="order_number" required maxlength="32" placeholder="AMJR-000000-0000" autocomplete="off">
+        <button type="submit" class="btn btn-gold">{{ __('Add my orders') }}</button>
       </div>
-    @endif
+      @error('order_number')<small class="claimerr">{{ $message }}</small>@enderror
+    </form>
 
     <div class="acctstats">
       <div class="astat">

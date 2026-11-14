@@ -26,7 +26,6 @@ class AccountController extends Controller
                                 ->latest()->take(3)->get(),
             'address'     => Address::where('user_id', auth()->id())
                                 ->orderByDesc('is_default')->first(),
-            'unclaimed'   => $this->unclaimedCount(),
         ]);
     }
 
@@ -37,7 +36,6 @@ class AccountController extends Controller
                 ->where('user_id', auth()->id())
                 ->latest()
                 ->paginate(10),
-            'unclaimed' => $this->unclaimedCount(),
         ]);
     }
 
@@ -51,24 +49,44 @@ class AccountController extends Controller
     }
 
     /**
-     * Guest orders carry no user_id. If the phone matches, the customer
-     * can claim them so their history is complete.
+     * Guest orders carry no user_id, and the phone on an account is only
+     * what the person typed — nobody has checked it. So a matching phone
+     * is not enough on its own: that would let anyone register with a
+     * stranger's number and read their orders and address.
+     *
+     * The customer proves the number is theirs the same way the tracking
+     * page does: one order number that was placed on it. That unlocks
+     * every guest order on that phone.
      */
-    public function claim()
+    public function claim(Request $request)
     {
+        $data = $request->validate([
+            'order_number' => ['required', 'string', 'max:32'],
+        ]);
+
         $phone = $this->phone();
 
         if (! $phone) {
-            return back()->with('error', __('Add your mobile number to your profile first.'));
+            return back()->with('status', __('Add your mobile number to your profile first.'));
+        }
+
+        $proven = Order::whereNull('user_id')
+            ->where('customer_phone', $phone)
+            ->where('order_number', trim($data['order_number']))
+            ->exists();
+
+        if (! $proven) {
+            // Deliberately the same answer whether the number is wrong or
+            // the order sits on another phone, so this cannot be used to
+            // test which phone numbers have ordered.
+            return back()->with('status', __('We could not match that order number to your mobile number.'));
         }
 
         $claimed = Order::whereNull('user_id')
             ->where('customer_phone', $phone)
             ->update(['user_id' => auth()->id()]);
 
-        return back()->with('status', $claimed
-            ? __(':n past order(s) added to your account.', ['n' => $claimed])
-            : __('No guest orders found for your number.'));
+        return back()->with('status', __(':n past order(s) added to your account.', ['n' => $claimed]));
     }
 
     /* ---------- addresses ---------- */
@@ -126,15 +144,6 @@ class AccountController extends Controller
         $phone = preg_replace('/\D/', '', (string) auth()->user()->phone);
 
         return $phone ?: null;
-    }
-
-    private function unclaimedCount(): int
-    {
-        $phone = $this->phone();
-
-        return $phone
-            ? Order::whereNull('user_id')->where('customer_phone', $phone)->count()
-            : 0;
     }
 
     private function validateAddress(Request $request): array

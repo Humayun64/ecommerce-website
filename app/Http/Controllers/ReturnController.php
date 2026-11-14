@@ -81,16 +81,13 @@ class ReturnController extends Controller
     /** The customer's own list, for the account dashboard. */
     public function mine()
     {
-        $phone = auth()->user()->phone;
-
+        // Only returns on orders that belong to this account. Matching on
+        // the phone number alone would show a stranger's returns to anyone
+        // who registered with that number.
         $rows = ReturnRequest::with('order')
-            ->where(function ($q) use ($phone) {
-                $q->where('user_id', auth()->id());
-
-                // Orders placed as a guest before they made the account.
-                if ($phone) {
-                    $q->orWhere('customer_phone', $phone);
-                }
+            ->where(function ($q) {
+                $q->where('user_id', auth()->id())
+                  ->orWhereHas('order', fn ($o) => $o->where('user_id', auth()->id()));
             })
             ->latest()
             ->paginate(10);
