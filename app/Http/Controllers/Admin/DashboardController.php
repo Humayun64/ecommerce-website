@@ -51,10 +51,26 @@ class DashboardController extends Controller
             'stale'         => Order::where('status', 'shipped')
                                     ->where('shipped_at', '<', now()->subDays(3))->count(),
 
+            // every order placed this month, by where it stands now
+            'pipeline'      => $this->pipeline(),
+
             'recentOrders'  => Order::latest()->take(8)->get(),
             'chart'         => $this->dailySales(),
             'topProducts'   => $this->topProducts(),
         ]);
+    }
+
+    /** This month's orders by status: how many and how much money. */
+    private function pipeline(): array
+    {
+        // toBase() so the "total" price cast does not touch the count.
+        return Order::query()->toBase()
+            ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
+            ->selectRaw('status, COUNT(*) as n, SUM(total) as amount')
+            ->groupBy('status')
+            ->get()
+            ->mapWithKeys(fn ($row) => [$row->status => ['n' => (int) $row->n, 'amount' => (float) $row->amount]])
+            ->all();
     }
 
     /** Last 14 days of revenue, for the bar chart. */

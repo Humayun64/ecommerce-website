@@ -104,6 +104,14 @@
     </div>
   </div>
 
+  {{-- orders by status --}}
+  @include('admin.partials.order-status', [
+    'pipeTitle' => 'Orders by status',
+    'pipeSub'   => 'Every order placed in these dates · ' . $t['cancel_rate'] . '% cancelled',
+    'pipeRows'  => $report['pipeline'],
+    'pipeQuery' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
+  ])
+
   @if ($t['uncosted'] > 0)
     <div class="note" style="margin-bottom:18px">
       <b>{{ $t['uncosted'] }} order{{ $t['uncosted'] === 1 ? '' : 's' }} in this period {{ $t['uncosted'] === 1 ? 'has' : 'have' }} products with no cost price.</b>
@@ -142,7 +150,7 @@
       <div class="panel-head"><h2>How the money adds up</h2></div>
       <div class="panel-body">
         <div class="rp-flow">
-          <div class="rp-line"><span>Product sales<small>{{ number_format($t['orders']) }} orders</small></span><b>{{ $money($t['sales']) }}</b></div>
+          <div class="rp-line"><span>Product sales<small>{{ number_format($t['orders']) }} order{{ $t['orders'] === 1 ? '' : 's' }}</small></span><b>{{ $money($t['sales']) }}</b></div>
           <div class="rp-line minus"><span>Discounts and coupons</span><b>− ৳{{ number_format($t['discounts']) }}</b></div>
           <div class="rp-line sum"><span>Net sales</span><b>{{ $money($t['net_sales']) }}</b></div>
           <div class="rp-line minus"><span>Cost of the goods sold<small>{{ $t['uncosted'] ? 'Costed orders only' : 'What you paid for them' }}</small></span><b>− ৳{{ number_format($t['cost']) }}</b></div>
@@ -258,25 +266,6 @@
         </div>
       </div>
     @endforeach
-  </div>
-
-  <div class="panel dash-panel" style="margin-top:18px">
-    <div class="panel-head">
-      <div><h2>Every order placed in these dates</h2><span class="sub">{{ number_format($t['placed']) }} placed · {{ $t['cancel_rate'] }}% cancelled</span></div>
-    </div>
-    <div class="panel-body">
-      @if (empty($report['byStatus']))
-        <p class="sub" style="margin:0">No orders were placed in these dates.</p>
-      @else
-        <div class="rp-status">
-          @foreach ($report['byStatus'] as $status => $count)
-            <a href="{{ route('admin.orders.index', ['status' => $status]) }}" class="badge status-{{ $status }}" style="font-size:13px;padding:7px 12px">
-              {{ $statusNames[$status] ?? $status }} · {{ $count }}
-            </a>
-          @endforeach
-        </div>
-      @endif
-    </div>
   </div>
 
 </div>

@@ -106,6 +106,14 @@
     </div>
   @endif
 
+  {{-- this month's orders by status --}}
+  @include('admin.partials.order-status', [
+    'pipeTitle' => 'Orders this month',
+    'pipeSub'   => 'Every order placed in ' . now()->format('F') . ', by where it stands now',
+    'pipeRows'  => $pipeline,
+    'pipeQuery' => ['from' => now()->startOfMonth()->toDateString(), 'to' => now()->toDateString()],
+  ])
+
   {{-- revenue chart --}}
   <div class="panel dash-panel" style="margin-bottom:18px">
     <div class="panel-head">

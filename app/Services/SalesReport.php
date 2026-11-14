@@ -102,6 +102,10 @@ class SalesReport
             'byPayment' => $this->group($live, fn ($o) => $o->payment_method, $this->paymentNames()),
             'byZone'    => $this->group($live, fn ($o) => $o->shipping_zone_name ?: 'No delivery area'),
             'byStatus'  => $orders->countBy('status')->all(),
+            'pipeline'  => $orders->groupBy('status')->map(fn ($group) => [
+                'n'      => $group->count(),
+                'amount' => (float) $group->sum(fn ($o) => (float) $o->total),
+            ])->all(),
             'customers' => $this->customers($live),
             'products'  => $this->products($from, $to),
             'expenseBy' => Expense::whereBetween('spent_on', [$from->toDateString(), $to->toDateString()])
