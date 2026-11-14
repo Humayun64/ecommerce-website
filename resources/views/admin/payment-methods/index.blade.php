@@ -66,7 +66,8 @@
             </span>
             @if ($method->driver === 'gateway')
               <small style="display:block;color:var(--ink-mute);font-size:12px;margin-top:4px">
-                {{ $method->gateway ? \App\Models\PaymentMethod::GATEWAYS[$method->gateway] : 'No provider' }} — not connected
+                {{ $method->gateway ? (\App\Models\PaymentMethod::GATEWAYS[$method->gateway] ?? $method->gateway) : 'No provider' }}
+                — {{ $method->is_connected ? ($method->is_sandbox ? 'connected, test mode' : 'connected, live') : 'not connected' }}
               </small>
             @endif
           </td>
@@ -82,7 +83,7 @@
             @if ($method->is_usable)
               <span class="pm-dot"><i></i> On</span>
             @elseif ($method->is_active && $method->driver === 'gateway')
-              <span class="pm-dot off"><i></i> Waiting on the API</span>
+              <span class="pm-dot off"><i></i> Needs store ID</span>
             @else
               <span class="pm-dot off"><i></i> Off</span>
             @endif
@@ -106,11 +107,11 @@
 
 <div class="note" style="margin-top:18px">
   <b>About the online gateways.</b>
-  SSLCommerz, and the bKash and Nagad APIs, have a place set aside here but no driver behind them
-  yet — a method set to <em>Automatic</em> will not appear at checkout however complete it looks,
-  so a customer can never think they paid online when nothing was taken. Everything you take today
-  goes through <em>Manual</em>: the customer sends the money themselves and types the transaction ID,
-  and you confirm it on the Payments screen.
+  SSLCommerz and aamarPay are built in. Open one, enter the store ID and the password or key from
+  your merchant panel, and switch it on — it appears at checkout as soon as both are saved. Start in
+  <em>test mode</em> and place one test order before going live. An online order is marked paid only
+  after the provider's own server confirms the amount; anything it cannot confirm waits on the
+  Payments screen for you to check.
 </div>
 
 @endsection

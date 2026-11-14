@@ -103,7 +103,9 @@ class CheckoutController extends Controller
                 'coupon_code' => session(CouponService::SESSION_KEY),
             ]);
 
-            $this->payments->record($order, $method, $paymentInput);
+            if (! $method->is_gateway) {
+                $this->payments->record($order, $method, $paymentInput);
+            }
         } catch (ValidationException $e) {
             // A coupon that failed at the last moment should not keep
             // blocking checkout — drop it and let them try again.
@@ -139,6 +141,12 @@ class CheckoutController extends Controller
         // without exposing every order number to anyone who guesses one.
         session()->put('recent_order', $order->id);
 
+        // Paying online: off to the provider's page. The order already
+        // exists, so a customer who closes that page can still pay later.
+        if ($method->is_gateway) {
+            return app(GatewayPaymentController::class)->send($order, $method);
+        }
+
         return redirect()->route('checkout.done', $order->order_number);
     }
 
@@ -152,7 +160,16 @@ class CheckoutController extends Controller
             403
         );
 
-        return view('site.checkout.done', compact('order'));
+        $method = \App\Models\PaymentMethod::where('code', $order->payment_method)->first();
+
+        return view('site.checkout.done', [
+            'order'  => $order,
+            'method' => $method,
+            // Offer "Pay now" only for an online method that is still unpaid.
+            'canPay' => $method && $method->is_gateway && $method->is_usable
+                && $order->payment_status !== 'paid'
+                && ! in_array($order->status, ['cancelled', 'returned'], true),
+        ]);
     }
 
     /* ---------- public tracking ---------- */

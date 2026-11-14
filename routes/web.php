@@ -27,6 +27,7 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\GatewayPaymentController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\FeedController;
@@ -74,6 +75,35 @@ Route::post('/checkout', [CheckoutController::class, 'store'])
     ->middleware('throttle:8,1')
     ->name('checkout.store');
 Route::get('/order/{number}/confirmed', [CheckoutController::class, 'done'])->name('checkout.done');
+
+/* ---------- paying online (SSLCommerz, aamarPay) ---------- */
+
+Route::get('/pay/{number}', [GatewayPaymentController::class, 'start'])
+    ->middleware('throttle:10,1')
+    ->name('pay.start');
+
+Route::get('/pay/{number}/result', [GatewayPaymentController::class, 'result'])
+    ->middleware('signed')
+    ->name('pay.result');
+
+/*
+ | The provider posts to these from its own website. They run without the
+ | "web" group on purpose: no session cookie comes with such a request, and
+ | starting a fresh session here would log the customer out. Each one proves
+ | itself another way — a signed token in the address, and a check with the
+ | provider's server before anything is marked paid.
+ */
+Route::match(['get', 'post'], '/pay/back/{payment}/{token}/{outcome}', [GatewayPaymentController::class, 'back'])
+    ->where(['payment' => '[0-9]+', 'token' => '[a-f0-9]{40}', 'outcome' => 'success|fail|cancel'])
+    ->withoutMiddleware('web')
+    ->middleware('throttle:30,1')
+    ->name('pay.back');
+
+Route::post('/pay/ipn/{gateway}', [GatewayPaymentController::class, 'ipn'])
+    ->where('gateway', '[a-z]+')
+    ->withoutMiddleware('web')
+    ->middleware('throttle:60,1')
+    ->name('pay.ipn');
 
 Route::get('/track', [CheckoutController::class, 'trackForm'])->name('orders.track');
 Route::post('/track', [CheckoutController::class, 'track'])->name('orders.track.submit');

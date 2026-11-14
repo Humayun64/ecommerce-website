@@ -135,6 +135,33 @@
     </div>
   </aside>
 
+  <script>
+  /* Keep the menu where it was. Every click loads a new page, which used
+     to put the menu back at the top — so the place is remembered, and the
+     current item is brought into view if it is still off-screen. */
+  (function () {
+    var KEY = 'amjrSideScroll';
+    var boxes = [document.querySelector('.side'), document.querySelector('.side nav')].filter(Boolean);
+
+    try {
+      var saved = JSON.parse(sessionStorage.getItem(KEY) || 'null');
+      if (saved) boxes.forEach(function (box, i) { box.scrollTop = saved[i] || 0; });
+    } catch (e) {}
+
+    var on = document.querySelector('.side .item.on');
+    if (on) {
+      var r = on.getBoundingClientRect();
+      if (r.top < 0 || r.bottom > window.innerHeight) on.scrollIntoView({ block: 'center' });
+    }
+
+    function save() {
+      try { sessionStorage.setItem(KEY, JSON.stringify(boxes.map(function (box) { return box.scrollTop; }))); } catch (e) {}
+    }
+    boxes.forEach(function (box) { box.addEventListener('scroll', save, { passive: true }); });
+    window.addEventListener('pagehide', save);
+  })();
+  </script>
+
   <div class="main">
     <div class="top">
       <h1>@yield('title', 'Dashboard')</h1>

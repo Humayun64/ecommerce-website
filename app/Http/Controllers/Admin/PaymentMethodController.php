@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PaymentMethod;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Validation\Rule;
 
 class PaymentMethodController extends Controller
@@ -35,6 +36,7 @@ class PaymentMethodController extends Controller
     public function store(Request $request)
     {
         $data = $this->validated($request, null);
+        $data['config'] = $this->gatewayConfig($request, $data, null);
 
         if ($request->hasFile('logo')) {
             $data['logo'] = $this->images->store($request->file('logo'), 'payments');
@@ -59,6 +61,7 @@ class PaymentMethodController extends Controller
     public function update(Request $request, PaymentMethod $paymentMethod)
     {
         $data = $this->validated($request, $paymentMethod->id);
+        $data['config'] = $this->gatewayConfig($request, $data, $paymentMethod);
 
         if ($request->hasFile('logo')) {
             $data['logo'] = $this->images->store($request->file('logo'), 'payments');
@@ -107,6 +110,9 @@ class PaymentMethodController extends Controller
             'is_default'     => ['nullable', 'boolean'],
             'sort_order'     => ['nullable', 'integer', 'min:0', 'max:999'],
             'logo'           => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp,svg', 'max:1024'],
+            'gateway_store_id' => ['nullable', 'string', 'max:120'],
+            'gateway_secret'   => ['nullable', 'string', 'max:200'],
+            'gateway_sandbox'  => ['nullable', 'boolean'],
         ], [
             'code.regex'   => __('Use lowercase letters, numbers, dashes or underscores only.'),
             'accent.regex' => __('The colour must be a hex code like #E2136E.'),
@@ -129,9 +135,37 @@ class PaymentMethodController extends Controller
             $data['gateway'] = null;
         }
 
-        unset($data['logo']);
+        unset($data['logo'], $data['gateway_store_id'], $data['gateway_secret'], $data['gateway_sandbox']);
 
         return $data;
+    }
+
+    /**
+     * The provider login for an online method.
+     *
+     * The secret is encrypted before it is stored and is never sent back to
+     * the form, so leaving the box empty means "keep the one already saved".
+     */
+    private function gatewayConfig(Request $request, array $data, ?PaymentMethod $existing): ?array
+    {
+        if ($data['driver'] !== 'gateway') {
+            return null;
+        }
+
+        $old = $existing?->config ?? [];
+
+        // A secret belongs to one provider. Switching provider drops it.
+        if ($existing && $existing->gateway !== $data['gateway']) {
+            $old = [];
+        }
+
+        $secret = (string) $request->input('gateway_secret', '');
+
+        return [
+            'store_id' => trim((string) $request->input('gateway_store_id', '')),
+            'secret'   => $secret !== '' ? Crypt::encryptString($secret) : ($old['secret'] ?? null),
+            'sandbox'  => $request->boolean('gateway_sandbox'),
+        ];
     }
 
     /** Exactly one method can be the one pre-selected at checkout. */

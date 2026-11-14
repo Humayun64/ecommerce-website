@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentMethod;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class PaymentService
@@ -110,6 +111,10 @@ class PaymentService
      */
     public function record(Order $order, PaymentMethod $method, array $input): Payment
     {
+        if ($method->is_gateway) {
+            return $this->openAttempt($order, $method);
+        }
+
         $txn = $this->normaliseTxn($input['transaction_id'] ?? null);
 
         if ($method->is_manual && $method->needs_txn && $txn) {
@@ -137,6 +142,54 @@ class PaymentService
 
             return $payment;
         });
+    }
+
+    /**
+     * Start one try at paying online.
+     *
+     * Every try gets its own transaction ID, because the providers refuse
+     * to reuse one. Nothing is marked paid here — that only happens when
+     * the provider's own server confirms it.
+     */
+    public function openAttempt(Order $order, PaymentMethod $method): Payment
+    {
+        return DB::transaction(function () use ($order, $method) {
+            Payment::where('order_id', $order->id)
+                ->where('method_code', $method->code)
+                ->where('status', 'pending')
+                ->update(['status' => 'rejected', 'admin_note' => 'Replaced by a newer payment attempt.']);
+
+            do {
+                $txn = $order->order_number . '-' . strtoupper(Str::random(5));
+            } while (Payment::where('transaction_id', $txn)->exists());
+
+            $payment = Payment::create([
+                'order_id'          => $order->id,
+                'payment_method_id' => $method->id,
+                'method_code'       => $method->code,
+                'method_name'       => $method->name,
+                'amount'            => $order->total,
+                'transaction_id'    => $txn,
+                'status'            => 'pending',
+            ]);
+
+            $order->update([
+                'payment_method' => $method->code,
+                'payment_status' => 'pending',
+            ]);
+
+            return $payment;
+        });
+    }
+
+    /** Keep what the provider told us next to the payment. */
+    public function note(Payment $payment, ?string $reference, ?string $note, array $raw): void
+    {
+        $payment->update([
+            'reference'  => $reference ?: $payment->reference,
+            'admin_note' => $note ?: $payment->admin_note,
+            'payload'    => $raw ?: $payment->payload,
+        ]);
     }
 
     /** Yes, the money arrived. */

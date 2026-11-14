@@ -17,6 +17,15 @@
       <strong>{{ $order->order_number }}</strong>
     </div>
     <p class="donehint">{{ __('Keep this number. You can check progress any time on the tracking page.') }}</p>
+
+    @if ($order->payment_status === 'paid' && $method && $method->is_gateway)
+      <div class="paynote ok">{{ __('Payment received — ৳:amount paid with :name.', ['amount' => number_format($order->total), 'name' => $method->name]) }}</div>
+    @elseif ($canPay)
+      <div class="paynote">
+        <span>{{ __('This order is not paid yet. Pay now to confirm it, or we will call you.') }}</span>
+        <a href="{{ route('pay.start', $order->order_number) }}" class="btn btn-gold">{{ __('Pay ৳:amount now', ['amount' => number_format($order->total)]) }}</a>
+      </div>
+    @endif
   </div>
 
   <div class="cartgrid">
@@ -46,7 +55,7 @@
 
       <div class="sumline"><span>{{ __('Delivery') }} — {{ $order->shipping_zone_name }}</span>
         <b>{{ $order->delivery_charge > 0 ? '৳' . number_format($order->delivery_charge) : __('Free') }}</b></div>
-      <div class="sumtotal"><span>{{ __('Pay on delivery') }}</span><b>৳{{ number_format($order->total) }}</b></div>
+      <div class="sumtotal"><span>{{ $order->payment_status === 'paid' ? __('Paid') : (($method && $method->driver !== 'cod') ? __('Total') : __('Pay on delivery')) }}</span><b>৳{{ number_format($order->total) }}</b></div>
     </div>
 
     <aside class="cartsum">
@@ -59,7 +68,7 @@
           {{ $order->customer_phone }}
         </p>
 
-        <div class="sumline"><span>{{ __('Payment') }}</span><b>{{ __('Cash on delivery') }}</b></div>
+        <div class="sumline"><span>{{ __('Payment') }}</span><b>{{ $method ? $method->name : __('Cash on delivery') }}</b></div>
         <div class="sumline"><span>{{ __('Status') }}</span><b>{{ __($order->status_label) }}</b></div>
 
         <a href="{{ route('orders.track') }}" class="btn btn-line" style="width:100%;margin-top:14px">{{ __('Track this order') }}</a>

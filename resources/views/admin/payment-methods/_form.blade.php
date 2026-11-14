@@ -6,7 +6,7 @@
 .pmf .field{margin-bottom:16px}
 .pmf .field:last-child{margin-bottom:0}
 .pmf label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
-.pmf input[type=text],.pmf input[type=number],.pmf select,.pmf textarea,.pmf input[type=file]{
+.pmf input[type=text],.pmf input[type=password],.pmf input[type=number],.pmf select,.pmf textarea,.pmf input[type=file]{
   width:100%;font:inherit;font-size:14px;padding:9px 11px;background:#fff;
   border:1px solid var(--line);border-radius:9px;outline:0;
 }
@@ -75,13 +75,50 @@
             <option value="{{ $key }}" @selected(old('gateway', $method->gateway) === $key)>{{ $label }}</option>
           @endforeach
         </select>
-        <div class="pm-soon">
-          <b>Not connected yet.</b>
-          Picking a provider here records which one you intend to use and keeps its settings, but
-          no automatic payment is taken — the method stays off the checkout page until the API
-          is built. Manual is what takes money today.
-        </div>
+@php $pmConfig = $method->config ?? []; @endphp
         @error('gateway')<div class="err">{{ $message }}</div>@enderror
+
+        <div class="row2" style="margin-top:16px">
+          <div class="field">
+            <label for="gateway_store_id">Store ID</label>
+            <input type="text" id="gateway_store_id" name="gateway_store_id" autocomplete="off"
+                   value="{{ old('gateway_store_id', $pmConfig['store_id'] ?? '') }}">
+            <div class="hint">From your merchant panel with the provider.</div>
+            @error('gateway_store_id')<div class="err">{{ $message }}</div>@enderror
+          </div>
+
+          <div class="field">
+            <label for="gateway_secret">Store password / signature key</label>
+            <input type="password" id="gateway_secret" name="gateway_secret" autocomplete="new-password"
+                   placeholder="{{ !empty($pmConfig['secret']) ? 'Saved — leave empty to keep it' : '' }}">
+            <div class="hint">SSLCommerz calls it the store password; aamarPay calls it the signature key. Stored encrypted and never shown again.</div>
+            @error('gateway_secret')<div class="err">{{ $message }}</div>@enderror
+          </div>
+        </div>
+
+        <label class="tick">
+          <input type="hidden" name="gateway_sandbox" value="0">
+          <input type="checkbox" name="gateway_sandbox" value="1" @checked(old('gateway_sandbox', $pmConfig['sandbox'] ?? true))>
+          <span><b>Test mode (sandbox)</b>
+          <span>No real money moves. Untick only when the provider has given you your live store ID.</span></span>
+        </label>
+
+        <div class="pm-soon" style="margin-top:4px">
+          @if ($method->exists && $method->is_connected)
+            <b>Connected{{ $method->is_sandbox ? ' — test mode' : '' }}.</b>
+            Customers who choose this are sent to the provider's page, and the order is marked paid
+            only after the provider's own server confirms the amount.
+          @else
+            <b>Not connected yet.</b>
+            Enter the store ID and the password or key, then save. Until both are in, this method
+            stays off the checkout page.
+          @endif
+          <div style="margin-top:8px">
+            For SSLCommerz, also paste this address into <em>IPN Settings</em> in their merchant panel:<br>
+            <code style="word-break:break-all">{{ route('pay.ipn', ['gateway' => 'sslcommerz']) }}</code>
+          </div>
+        </div>
+
       </div>
 
       <div id="manualRows">
