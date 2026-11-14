@@ -65,7 +65,9 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    // The shop is in Bangladesh, so order times, invoices, the dashboard's
+    // "today" and the return window are all counted in Dhaka time.
+    'timezone' => env('APP_TIMEZONE', 'Asia/Dhaka'),
 
     /*
     |--------------------------------------------------------------------------
