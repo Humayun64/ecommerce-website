@@ -537,3 +537,157 @@ footer a:hover{color:var(--gold)}
 .dangerbox{border-color:#E9CFCD}
 .btn-danger-solid{background:#B3261E;color:#fff;height:44px;padding:0 22px;border-radius:3px;font-weight:600;font-size:14.5px;display:inline-flex;align-items:center;border:0;cursor:pointer;font-family:inherit}
 .btn-danger-solid:hover{background:#8A1E17}
+
+
+/* ============ batch 30: auth pages refresh ============ */
+
+/* the password field was missing from the base rule above, so it rendered unstyled */
+.cofield input[type=password]{width:100%;border:1.5px solid var(--line);border-radius:3px;padding:11px 13px;font:inherit;font-size:15px;background:#fff}
+
+.authpage{padding:48px 0 72px;position:relative;overflow:hidden}
+.authpage::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(620px 320px at 12% -6%,rgba(223,163,39,.10),transparent 70%),
+             radial-gradient(520px 300px at 96% 104%,rgba(20,48,90,.09),transparent 70%)}
+.authgrid{position:relative;z-index:1}
+
+/* card */
+.authcard{position:relative;border-radius:8px;padding:38px 34px 30px;overflow:hidden;
+  box-shadow:0 1px 2px rgba(12,28,54,.04),0 22px 44px -26px rgba(12,28,54,.32);
+  animation:auRise .55s cubic-bezier(.2,.7,.2,1) backwards}
+.authcard::before{content:"";position:absolute;left:0;top:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--gold),#F0C461 50%,var(--navy));
+  transform-origin:left;animation:auBar .9s .15s cubic-bezier(.2,.7,.2,1) both}
+.authcard h1{letter-spacing:-.02em}
+.authsub{margin-bottom:26px}
+
+/* fields */
+.authcard .cofield{margin-bottom:18px;animation:auRise .5s cubic-bezier(.2,.7,.2,1) backwards}
+.authcard form > :nth-child(2){animation-delay:.08s}
+.authcard form > :nth-child(3){animation-delay:.14s}
+.authcard form > :nth-child(4){animation-delay:.20s}
+.authcard form > :nth-child(5){animation-delay:.26s}
+.authcard form > :nth-child(6){animation-delay:.32s}
+.authcard .cofield label{transition:color .18s}
+.authcard .cofield:focus-within label{color:var(--navy)}
+.authcard .cofield input[type=text],.authcard .cofield input[type=tel],
+.authcard .cofield input[type=email],.authcard .cofield input[type=password]{
+  height:48px;padding:0 14px;border-radius:6px;background:#FAFBFC;
+  transition:border-color .18s,box-shadow .18s,background-color .18s}
+.authcard .cofield input:hover{border-color:#C2C7D1}
+.authcard .cofield input:focus{border-color:var(--navy);background:#fff;box-shadow:0 0 0 4px rgba(20,48,90,.10)}
+.authcard .cofield input::placeholder{color:#A3A9B5}
+
+/* browser autofill: keep the field white instead of yellow */
+.authcard .cofield input:-webkit-autofill{-webkit-text-fill-color:var(--ink);caret-color:var(--ink);
+  -webkit-box-shadow:0 0 0 100px #fff inset;box-shadow:0 0 0 100px #fff inset}
+.authcard .cofield input:-webkit-autofill:focus{
+  -webkit-box-shadow:0 0 0 100px #fff inset,0 0 0 4px rgba(20,48,90,.10);box-shadow:0 0 0 100px #fff inset,0 0 0 4px rgba(20,48,90,.10)}
+.authcard .cofield input:autofill{box-shadow:0 0 0 100px #fff inset}
+.authcard .cofield input:autofill:focus{box-shadow:0 0 0 100px #fff inset,0 0 0 4px rgba(20,48,90,.10)}
+
+/* icon + show/hide button (added by the script in auth-shell) */
+.auwrap{position:relative;display:block}
+.auwrap .auico{position:absolute;left:14px;top:50%;width:18px;height:18px;margin-top:-9px;color:#8A93A3;
+  pointer-events:none;z-index:1;transition:color .18s,transform .18s}
+.auwrap:focus-within .auico{color:var(--navy);transform:scale(1.06)}
+.authcard .cofield .auwrap input{padding-left:44px}
+.authcard .cofield .auwrap.haspw input{padding-right:50px}
+.pwtoggle{position:absolute;right:6px;top:50%;width:36px;height:36px;margin-top:-18px;display:grid;place-items:center;
+  border:0;background:none;border-radius:6px;color:#7B8494;cursor:pointer;z-index:1;transition:background .15s,color .15s}
+.pwtoggle:hover{background:var(--paper);color:var(--navy)}
+.pwtoggle svg{width:19px;height:19px}
+.pwtoggle .slash{stroke-dasharray:26;stroke-dashoffset:26;transition:stroke-dashoffset .25s ease}
+.pwtoggle.on{color:var(--navy)}
+.pwtoggle.on .slash{stroke-dashoffset:0}
+.capshint{display:none;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--warn);margin-top:7px}
+.capshint.show{display:flex;animation:auRise .25s backwards}
+.capshint svg{width:14px;height:14px;flex-shrink:0}
+
+/* remember me + forgot link */
+.authrow{margin:2px 0 22px;animation:auRise .5s .2s cubic-bezier(.2,.7,.2,1) backwards}
+.authcard .fcheck{padding:0;font-size:14px;gap:10px;user-select:none}
+.authcard .fcheck input{appearance:none;-webkit-appearance:none;width:18px;height:18px;border:1.5px solid #B7BDC8;border-radius:4px;
+  background:#fff;display:grid;place-content:center;cursor:pointer;transition:background .15s,border-color .15s,box-shadow .15s}
+.authcard .fcheck input::after{content:"";width:9px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;
+  transform:rotate(-45deg) scale(0);margin-top:-2px;transition:transform .18s cubic-bezier(.3,1.5,.6,1)}
+.authcard .fcheck input:checked{background:var(--navy);border-color:var(--navy)}
+.authcard .fcheck input:checked::after{transform:rotate(-45deg) scale(1)}
+.authcard .fcheck input:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(20,48,90,.14)}
+.authcard .fcheck:hover input{border-color:var(--navy)}
+.authlink{text-decoration:none;font-weight:600;background:linear-gradient(var(--gold),var(--gold)) no-repeat 0 100%/0 2px;
+  padding-bottom:2px;transition:background-size .25s ease}
+.authlink:hover{background-size:100% 2px}
+
+/* main button */
+.authcard form > .btn-gold{position:relative;overflow:hidden;gap:10px;border:0;border-radius:6px;font-family:inherit;font-size:15.5px;cursor:pointer;
+  box-shadow:0 10px 20px -12px rgba(223,163,39,.95);
+  transition:transform .15s,box-shadow .2s,background .15s;animation:auRise .5s .26s cubic-bezier(.2,.7,.2,1) backwards}
+.authcard form > .btn-gold::before{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-18deg);transition:left .55s ease}
+.authcard form > .btn-gold::after{content:"\2192";font-size:17px;line-height:1;transition:transform .2s}
+.authcard form > .btn-gold:hover{transform:translateY(-1px);box-shadow:0 14px 24px -12px rgba(223,163,39,1)}
+.authcard form > .btn-gold:hover::before{left:120%}
+.authcard form > .btn-gold:hover::after{transform:translateX(4px)}
+.authcard form > .btn-gold:active{transform:translateY(0) scale(.985)}
+.authcard form > .btn-gold.is-loading{pointer-events:none;color:transparent}
+.authcard form > .btn-gold.is-loading::after{content:"";position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;
+  border:2.5px solid rgba(12,28,54,.25);border-top-color:var(--navy-deep);border-radius:50%;transform:none;animation:auSpin .7s linear infinite}
+
+.authcard .warnbox.bad{animation:auShake .45s .1s backwards}
+.authswap{animation:auRise .5s .32s cubic-bezier(.2,.7,.2,1) backwards}
+
+/* side panel */
+.authside{position:relative;overflow:hidden;border-radius:8px;
+  background:radial-gradient(420px 260px at 100% 0,rgba(30,64,121,.9),transparent 70%),var(--navy);
+  box-shadow:0 22px 44px -26px rgba(12,28,54,.55);animation:auRise .6s .08s cubic-bezier(.2,.7,.2,1) backwards}
+.authside > *{position:relative;z-index:1}
+.authside::before{content:"";position:absolute;right:-110px;bottom:-110px;width:300px;height:300px;border-radius:50%;
+  border:1.5px dashed rgba(223,163,39,.28);animation:auSpin 60s linear infinite}
+.authside::after{content:"";position:absolute;right:-60px;bottom:-60px;width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(223,163,39,.20),transparent 68%);animation:auPulse 6s ease-in-out infinite}
+.authmark svg{display:block;animation:auFloat 5s ease-in-out infinite}
+.authlist li{animation:auSlide .5s cubic-bezier(.2,.7,.2,1) backwards}
+.authlist li:nth-child(1){animation-delay:.25s}
+.authlist li:nth-child(2){animation-delay:.35s}
+.authlist li:nth-child(3){animation-delay:.45s}
+
+/* round 2: badge, richer side list, email tick, secure note */
+.authpage::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.55;
+  background-image:radial-gradient(rgba(20,48,90,.10) 1px,transparent 1.2px);background-size:22px 22px;
+  -webkit-mask-image:radial-gradient(70% 60% at 50% 40%,#000,transparent 75%);mask-image:radial-gradient(70% 60% at 50% 40%,#000,transparent 75%)}
+.aubadge{position:relative;width:46px;height:46px;border-radius:12px;display:grid;place-items:center;margin-bottom:18px;
+  color:var(--navy);background:linear-gradient(145deg,#FBF1D8,var(--gold-pale));box-shadow:inset 0 0 0 1px rgba(223,163,39,.45);
+  animation:auPop .55s .1s cubic-bezier(.3,1.5,.6,1) backwards}
+.aubadge svg{width:24px;height:24px}
+.aubadge::after{content:"";position:absolute;inset:-5px;border-radius:16px;border:1.5px solid rgba(223,163,39,.5);animation:auRing 2.8s ease-out 1s infinite}
+.auwrap .auok{position:absolute;right:14px;top:50%;width:18px;height:18px;margin-top:-9px;color:var(--ok);pointer-events:none;
+  opacity:0;transform:scale(.4);transition:opacity .2s,transform .25s cubic-bezier(.3,1.5,.6,1)}
+.auwrap.isok .auok{opacity:1;transform:none}
+.authcard .cofield .auwrap.isok input{padding-right:42px}
+.ausecure{display:flex;align-items:center;justify-content:center;gap:7px;margin:16px 0 0;font-size:12.5px;color:var(--ink-mute);
+  animation:auRise .5s .38s cubic-bezier(.2,.7,.2,1) backwards}
+.ausecure svg{width:14px;height:14px;flex-shrink:0;color:var(--ok)}
+.authlist.rich li{padding:0 0 20px 52px;min-height:58px}
+.authlist.rich li::before{display:none}
+.authlist.rich .auli{position:absolute;left:0;top:1px;width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:var(--gold);
+  background:rgba(223,163,39,.12);box-shadow:inset 0 0 0 1px rgba(223,163,39,.28);transition:transform .2s,background .2s}
+.authlist.rich .auli svg{width:19px;height:19px}
+.authlist.rich li:hover .auli{transform:translateY(-2px) scale(1.05);background:rgba(223,163,39,.2)}
+.authside h2{font-size:20px}
+@keyframes auPop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+@keyframes auRing{0%{opacity:.9;transform:scale(.92)}70%,100%{opacity:0;transform:scale(1.25)}}
+
+@keyframes auRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes auSlide{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+@keyframes auBar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes auSpin{to{transform:rotate(360deg)}}
+@keyframes auFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes auPulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.12)}}
+@keyframes auShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+
+@media(max-width:840px){.authpage{padding:26px 0 44px}.authcard{padding:30px 22px 24px}.authside{padding:26px 22px}}
+@media(prefers-reduced-motion:reduce){
+  .authcard,.authcard::before,.authcard .cofield,.authrow,.authswap,.authside,.authside::before,.authside::after,
+  .authmark svg,.authlist li,.authcard form > .btn-gold,.authcard .warnbox.bad,.capshint.show,.aubadge,.aubadge::after,.ausecure{animation:none}
+  .authcard form > .btn-gold::before{display:none}
+}

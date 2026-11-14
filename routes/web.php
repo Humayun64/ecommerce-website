@@ -110,7 +110,7 @@ Route::middleware('auth')->prefix('account')->name('account.')->group(function (
     Route::delete('addresses/{address}', [AccountController::class, 'destroyAddress'])->name('addresses.destroy');
 });
 
-Route::get('/dashboard', fn () => redirect()->route('account.dashboard'))
+Route::get('/dashboard', \App\Http\Controllers\DashboardRedirectController::class)
     ->middleware(['auth'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
