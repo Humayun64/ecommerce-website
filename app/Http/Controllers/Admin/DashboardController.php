@@ -26,7 +26,8 @@ class DashboardController extends Controller
 
         $revenue = (float) $monthOrders->sum('subtotal');
         $profit  = (float) $monthOrders->filter(fn ($o) => $o->cost_total !== null)
-            ->sum(fn ($o) => (float) $o->subtotal - (float) $o->cost_total);
+            // Discounts come off too, so this matches the Reports page.
+            ->sum(fn ($o) => (float) $o->subtotal - (float) $o->discount - (float) $o->cost_total);
 
         return view('admin.dashboard', [
             // catalog

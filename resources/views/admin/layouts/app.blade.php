@@ -37,6 +37,15 @@
         Dashboard
       </a>
 
+      <a href="{{ route('admin.reports.index') }}" class="item {{ request()->routeIs('admin.reports.*') ? 'on' : '' }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+        Reports
+      </a>
+      <a href="{{ route('admin.expenses.index') }}" class="item {{ request()->routeIs('admin.expenses.*') ? 'on' : '' }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg>
+        Expenses
+      </a>
+
       <div class="grp">Selling</div>
       <a href="{{ route('admin.orders.index') }}" class="item {{ request()->routeIs('admin.orders.*') ? 'on' : '' }}">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2.5h12l2 5v13a1 1 0 01-1 1H5a1 1 0 01-1-1v-13z"/><path d="M4 7.5h16M9.5 11.5a2.5 2.5 0 005 0"/></svg>
