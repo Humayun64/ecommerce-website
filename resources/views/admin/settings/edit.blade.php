@@ -197,4 +197,46 @@
   </div>
 </form>
 
+<form method="POST" action="{{ route('admin.settings.password') }}" id="password" style="margin-top:18px;max-width:760px">
+  @csrf
+  @method('PUT')
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Admin password</h2>
+      <span class="sub">For {{ auth()->user()->email }}</span>
+    </div>
+    <div class="panel-body">
+
+      @if ($errors->adminPassword->any())
+        <div class="alert alert-bad" style="margin-bottom:16px">
+          <ul style="margin:0;padding-left:18px">
+            @foreach ($errors->adminPassword->all() as $error)<li>{{ $error }}</li>@endforeach
+          </ul>
+        </div>
+      @endif
+
+      <div class="field">
+        <label for="current_password">Current password</label>
+        <input type="password" id="current_password" name="current_password" required autocomplete="current-password">
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="field">
+          <label for="new_password">New password</label>
+          <input type="password" id="new_password" name="password" required minlength="10" autocomplete="new-password">
+          <div class="hint">At least 10 characters, with letters and numbers.</div>
+        </div>
+        <div class="field">
+          <label for="new_password_confirmation">Repeat new password</label>
+          <input type="password" id="new_password_confirmation" name="password_confirmation" required minlength="10" autocomplete="new-password">
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-navy">Change password</button>
+      <p class="sub" style="margin:12px 0 0">Other devices logged in to this account are signed out when the password changes.</p>
+    </div>
+  </div>
+</form>
+
 @endsection

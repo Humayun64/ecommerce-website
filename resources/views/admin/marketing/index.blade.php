@@ -187,6 +187,27 @@
             </div>
           </div>
 
+          <div class="mk-src">
+            <div class="mk-top">
+              <span class="mk-ic" style="background:#EA4335">S</span>
+              <span class="mk-meta">
+                <b>Google Search Console</b>
+                <span>Proves to Google that you own the site, so you can see how it does in search.</span>
+              </span>
+            </div>
+            <div class="mk-f">
+              <label for="gsc_verification">Verification code</label>
+              <input type="text" id="gsc_verification" name="gsc_verification"
+                     placeholder='<meta name="google-site-verification" content="…">'
+                     value="{{ old('gsc_verification', $settings['gsc_verification'] ?? '') }}">
+              <div class="where">
+                Search Console → Add property → URL prefix → HTML tag. Paste the whole tag or only the code, save here, then press Verify in Google.
+                Afterwards submit your sitemap there: <code>{{ url('/sitemap.xml') }}</code>
+              </div>
+              @error('gsc_verification')<div class="err">{{ $message }}</div>@enderror
+            </div>
+          </div>
+
           <div style="margin-top:18px">
             <button class="btn btn-navy">Save tracking codes</button>
           </div>
@@ -282,6 +303,11 @@
         @endforeach
 
         <div class="mk-stat">
+          <span>Search Console</span>
+          <span class="mk-tag {{ !empty($settings['gsc_verification']) ? 'mk-on' : 'mk-off' }}">{{ !empty($settings['gsc_verification']) ? 'Tag added' : 'Not set' }}</span>
+        </div>
+
+        <div class="mk-stat">
           <span>Google Ads label</span>
           @if ($codes->isSet('google_ads_label'))
             <span class="mk-tag mk-on">Live</span>
@@ -330,6 +356,9 @@
 
         <b>Google Ads</b>
         Goals → Conversions → create a <em>Purchase</em> action for a website → Tag setup → the ID and label are in the code shown.
+
+        <b>Google Search Console</b>
+        search.google.com/search-console → Add property → choose <em>URL prefix</em> and enter your site address → pick the <em>HTML tag</em> method → copy the tag, paste it in the box on this page and save → go back and press Verify. Then open Sitemaps and submit <em>sitemap.xml</em>.
 
         <b>Checking it works</b>
         Install the <em>Meta Pixel Helper</em> extension in Chrome, open your shop, and it should show

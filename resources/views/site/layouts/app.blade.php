@@ -29,7 +29,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Public+Sans:wght@400;500;600;700&family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet">
 {{-- The ?v= number changes whenever site.css changes, so browsers fetch the new file instead of a cached old one. --}}
-<link rel="stylesheet" href="{{ asset('css/site.css') }}?v={{ @filemtime(public_path('css/site.css')) ?: 1 }}">
+<link rel="stylesheet" href="{{ asset('css/site.css') }}?v={{ filemtime(public_path('css/site.css')) }}">
+
+@if (preg_match('/^[A-Za-z0-9_-]{20,100}$/', $settings['gsc_verification'] ?? ''))
+<meta name="google-site-verification" content="{{ $settings['gsc_verification'] }}">
+@endif
 
 @stack('head')
 </head>

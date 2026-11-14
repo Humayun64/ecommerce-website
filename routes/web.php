@@ -257,6 +257,9 @@ Route::middleware(['auth', 'admin'])
 
         Route::get('settings', [SettingController::class, 'edit'])->name('settings.edit');
         Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
+        Route::put('settings/password', [SettingController::class, 'password'])
+            ->middleware('throttle:6,1')
+            ->name('settings.password');
     });
 
 require __DIR__.'/auth.php';

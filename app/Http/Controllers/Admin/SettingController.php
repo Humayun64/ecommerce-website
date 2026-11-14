@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rules\Password;
 
 class SettingController extends Controller
 {
@@ -84,5 +86,36 @@ class SettingController extends Controller
         Setting::put($pairs);
 
         return back()->with('status', __('Settings saved.'));
+    }
+
+    /**
+     * Change the password of whoever is logged in to the panel.
+     *
+     * The current password is asked for so that a panel left open on a
+     * shared computer cannot be used to lock the owner out.
+     */
+    public function password(Request $request)
+    {
+        $data = $request->validateWithBag('adminPassword', [
+            'current_password' => ['required', 'current_password'],
+            'password'         => ['required', 'confirmed', 'different:current_password', Password::min(10)->letters()->numbers()],
+        ], [
+            'current_password.current_password' => __('That is not your current password.'),
+            'password.different'                => __('The new password must be different from the current one.'),
+        ]);
+
+        $user = $request->user();
+        $user->password = $data['password'];   // hashed by the model's cast
+        $user->save();
+
+        // Anyone else still logged in with the old password is signed out.
+        if (config('session.driver') === 'database') {
+            DB::table(config('session.table', 'sessions'))
+                ->where('user_id', $user->id)
+                ->where('id', '!=', $request->session()->getId())
+                ->delete();
+        }
+
+        return back()->with('status', __('Password changed. Use the new one next time you log in.'));
     }
 }
