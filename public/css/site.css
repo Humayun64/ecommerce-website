@@ -948,3 +948,9 @@ footer.ft .chip.c-mc::before{width:14px;border-radius:8px;background:linear-grad
 .cnt{background:linear-gradient(135deg,#F0C461,#DFA327);box-shadow:0 4px 8px -3px rgba(223,163,39,.9)}
 .nav{background:linear-gradient(90deg,#0E2242,#14305A 50%,#1B3F7A)}
 @media(prefers-reduced-motion:reduce){.search button:hover{transform:none}}
+/* fewer than four departments: the tiles share the full width */
+@media(min-width:901px){
+  .hm .cats:has(> .cat:nth-child(3):last-child){grid-template-columns:repeat(3,1fr)}
+  .hm .cats:has(> .cat:nth-child(2):last-child){grid-template-columns:repeat(2,1fr)}
+  .hm .cats:has(> .cat:nth-child(1):last-child){grid-template-columns:1fr}
+}
