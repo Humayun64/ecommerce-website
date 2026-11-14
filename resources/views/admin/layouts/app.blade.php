@@ -120,6 +120,10 @@
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 10.5v3a1 1 0 001 1h2.5l5 4V5.5l-5 4H4a1 1 0 00-1 1z"/><path d="M16 9.5a4 4 0 010 5M18.8 6.8a8 8 0 010 10.4"/></svg>
         Marketing &amp; Ads
       </a>
+      <a href="{{ route('admin.couriers.index') }}" class="item {{ request()->routeIs('admin.couriers.*') ? 'on' : '' }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M2 7h11v9H2zM13 10h4l3 3v3h-7z"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/></svg>
+        Couriers
+      </a>
       <a href="{{ route('admin.payment-methods.index') }}" class="item {{ request()->routeIs('admin.payment-methods.*') ? 'on' : '' }}">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="12" r="2.2"/><path d="M13 10h5M13 14h5"/></svg>
         Payment methods

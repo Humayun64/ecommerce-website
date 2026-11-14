@@ -54,51 +54,9 @@ class OrderController extends Controller
             'status' => ['required', Rule::in(array_keys(Order::STATUSES))],
         ]);
 
-        $from = $order->status;
-        $to   = $data['status'];
+        $message = app(\App\Services\OrderStatus::class)->change($order, $data['status']);
 
-        if ($from === $to) {
-            return back();
-        }
-
-        $wasLive  = ! in_array($from, ['cancelled', 'returned']);
-        $nowDead  = in_array($to, ['cancelled', 'returned']);
-        $wasDead  = ! $wasLive;
-        $nowLive  = ! $nowDead;
-
-        $stamps = [
-            'confirmed' => 'confirmed_at',
-            'shipped'   => 'shipped_at',
-            'delivered' => 'delivered_at',
-            'cancelled' => 'cancelled_at',
-        ];
-
-        $payload = ['status' => $to];
-
-        if (isset($stamps[$to]) && ! $order->{$stamps[$to]}) {
-            $payload[$stamps[$to]] = now();
-        }
-
-        // Delivered means the courier collected the cash.
-        if ($to === 'delivered' && $order->payment_method === 'cod') {
-            $payload['payment_status'] = 'paid';
-        }
-
-        $order->update($payload);
-
-        // Stock goes back when an order dies, and comes off again if it is revived.
-        if ($wasLive && $nowDead) {
-            $this->orders->restock($order->load('items'));
-            $message = __('Order cancelled and stock returned.');
-        } elseif ($wasDead && $nowLive) {
-            $message = __('Order reopened. Check stock — it was returned when the order was cancelled.');
-        } else {
-            $message = __('Status updated to :status.', ['status' => __(Order::STATUSES[$to])]);
-        }
-
-        $this->mailer->statusChanged($order->fresh(), $to);
-
-        return back()->with('status', $message);
+        return $message === null ? back() : back()->with('status', $message);
     }
 
     public function updateDelivery(Request $request, Order $order)

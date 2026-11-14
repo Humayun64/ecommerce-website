@@ -14,6 +14,7 @@ class Order extends Model
         'total', 'cost_total',
         'payment_method', 'payment_status', 'status',
         'customer_note', 'admin_note', 'courier', 'tracking_number',
+        'courier_code', 'courier_ref', 'courier_status', 'courier_synced_at',
         'confirmed_at', 'shipped_at', 'delivered_at', 'cancelled_at',
     ];
 
@@ -27,6 +28,7 @@ class Order extends Model
         'shipped_at'      => 'datetime',
         'delivered_at'    => 'datetime',
         'cancelled_at'    => 'datetime',
+        'courier_synced_at' => 'datetime',
     ];
 
     public const STATUSES = [
@@ -84,5 +86,11 @@ class Order extends Model
         return $this->cost_total === null
             ? null
             : (float) $this->subtotal - (float) $this->cost_total - (float) $this->discount;
+    }
+
+    /** The courier's own tracking page, when the order was booked through one. */
+    public function getCourierTrackUrlAttribute(): ?string
+    {
+        return app(\App\Services\CourierManager::class)->trackUrl($this);
     }
 }

@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
+use App\Http\Controllers\Admin\CourierController;
 use App\Http\Controllers\Admin\ContactController as AdminContactController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\BlogCategoryController;
@@ -178,6 +179,14 @@ Route::middleware(['auth', 'admin'])
         Route::get('orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
         Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
         Route::patch('orders/{order}/delivery', [OrderController::class, 'updateDelivery'])->name('orders.delivery');
+        Route::post('orders/{order}/courier', [CourierController::class, 'book'])->name('orders.courier');
+        Route::post('orders/{order}/courier/sync', [CourierController::class, 'sync'])->name('orders.courier.sync');
+
+        Route::get('couriers', [CourierController::class, 'index'])->name('couriers.index');
+        Route::post('couriers/sync', [CourierController::class, 'syncAll'])->name('couriers.sync');
+        Route::put('couriers/{code}', [CourierController::class, 'update'])->name('couriers.update');
+        Route::post('couriers/{code}/test', [CourierController::class, 'test'])->name('couriers.test');
+        Route::get('couriers/{code}/areas', [CourierController::class, 'areas'])->name('couriers.areas');
 
         Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
         Route::get('customers/{phone}', [CustomerController::class, 'show'])->name('customers.show');

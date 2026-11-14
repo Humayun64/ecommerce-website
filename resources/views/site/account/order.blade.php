@@ -38,6 +38,9 @@
       @if ($order->courier && $order->tracking_number)
         <div class="warnbox" style="margin-bottom:18px">
           {{ __('Courier') }}: <b>{{ $order->courier }}</b> — {{ __('tracking') }} <b>{{ $order->tracking_number }}</b>
+          @if ($order->courier_track_url)
+            · <a href="{{ $order->courier_track_url }}" target="_blank" rel="noopener" style="color:var(--navy);font-weight:600;text-decoration:underline">{{ __('Follow the parcel') }}</a>
+          @endif
         </div>
       @endif
 

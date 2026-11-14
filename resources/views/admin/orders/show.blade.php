@@ -79,6 +79,98 @@
     </div>
   @endif
 
+  @php
+    $courierChoices = app(\App\Services\CourierManager::class)->available();
+    $courierNeeds   = collect(app(\App\Services\CourierManager::class)->all())->map(fn ($d) => $d->needsArea())->all();
+  @endphp
+  <div class="panel" id="courier">
+    <div class="panel-head">
+      <h2>Send to courier</h2>
+      <a href="{{ route('admin.couriers.index') }}" class="sub">Courier settings</a>
+    </div>
+    <div class="panel-body">
+      @if ($order->courier_code)
+        <div class="row2">
+          <div>
+            <div class="sub">Booked with</div>
+            <strong>{{ $order->courier }}</strong>
+            <div class="sub" style="margin-top:8px">Tracking code</div>
+            @if ($order->courier_track_url)
+              <a href="{{ $order->courier_track_url }}" target="_blank" rel="noopener"><strong>{{ $order->tracking_number }}</strong> ↗</a>
+            @else
+              <strong>{{ $order->tracking_number }}</strong>
+            @endif
+          </div>
+          <div>
+            <div class="sub">Courier says</div>
+            <span class="badge b-gold">{{ $order->courier_status ?: 'unknown' }}</span>
+            <div class="sub" style="margin-top:8px">Last checked {{ $order->courier_synced_at ? $order->courier_synced_at->diffForHumans() : 'never' }}</div>
+          </div>
+        </div>
+        <form method="POST" action="{{ route('admin.orders.courier.sync', $order) }}" style="margin-top:14px">
+          @csrf
+          <button type="submit" class="btn btn-navy">Check status now</button>
+        </form>
+      @elseif (in_array($order->status, ['cancelled', 'returned']))
+        <p class="sub" style="margin:0">This order is {{ strtolower($order->status_label) }}, so it cannot be sent to a courier.</p>
+      @elseif (empty($courierChoices))
+        <p class="sub" style="margin:0 0 12px">No courier is connected yet. Add your Steadfast or RedX keys and switch one on.</p>
+        <a href="{{ route('admin.couriers.index') }}" class="btn btn-navy">Set up a courier</a>
+      @else
+        <form method="POST" action="{{ route('admin.orders.courier', $order) }}" id="courierForm">
+          @csrf
+          <div class="row2">
+            <div class="field">
+              <label for="courier_code">Courier</label>
+              <select id="courier_code" name="courier_code">
+                @foreach ($courierChoices as $code => $label)
+                  <option value="{{ $code }}" data-area="{{ ($courierNeeds[$code] ?? false) ? 1 : 0 }}" @selected(old('courier_code') === $code)>{{ $label }}</option>
+                @endforeach
+              </select>
+            </div>
+            <div class="field">
+              <label for="cod">Cash to collect (৳)</label>
+              <input type="number" id="cod" name="cod" min="0" step="1"
+                     value="{{ old('cod', $order->payment_status === 'paid' ? 0 : (int) round($order->total)) }}">
+              <div class="hint">{{ $order->payment_status === 'paid' ? 'Already paid, so nothing to collect.' : 'The order total. Change it only if part was paid in advance.' }}</div>
+            </div>
+          </div>
+
+          <div id="courierArea" hidden>
+            <div class="row2">
+              <div class="field">
+                <label for="area_search">Delivery area</label>
+                <input type="text" id="area_search" placeholder="Type at least 2 letters, e.g. Uttara" autocomplete="off"
+                       data-url="{{ route('admin.couriers.areas', '__CODE__') }}">
+                <select id="area_pick" size="5" style="margin-top:6px;display:none"></select>
+                <input type="hidden" name="area_id" id="area_id" value="{{ old('area_id') }}">
+                <input type="hidden" name="area_name" id="area_name" value="{{ old('area_name') }}">
+                <div class="hint" id="area_hint">The courier needs an area from its own list.</div>
+              </div>
+              <div class="field">
+                <label for="weight">Parcel weight (grams)</label>
+                <input type="number" id="weight" name="weight" min="1" max="50000" value="{{ old('weight', 500) }}">
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="courier_note">Note for the rider <span class="sub">(optional)</span></label>
+            <input type="text" id="courier_note" name="note" maxlength="200" value="{{ old('note', $order->customer_note) }}">
+          </div>
+
+          <label class="check" style="display:flex;gap:9px;align-items:center;margin-bottom:14px;font-size:14px">
+            <input type="hidden" name="mark_shipped" value="0">
+            <input type="checkbox" name="mark_shipped" value="1" checked>
+            Mark the order as Shipped and tell the customer
+          </label>
+
+          <button type="submit" class="btn btn-gold">Send to courier</button>
+        </form>
+      @endif
+    </div>
+  </div>
+
   <div class="panel">
     <div class="panel-head"><h2>Courier and notes</h2></div>
     <div class="panel-body">
@@ -93,7 +185,7 @@
           <div class="field">
             <label for="tracking_number">Tracking number</label>
             <input type="text" id="tracking_number" name="tracking_number" value="{{ old('tracking_number', $order->tracking_number) }}">
-            <div class="hint">Shown to the customer on the tracking page.</div>
+            <div class="hint">Shown to the customer on the tracking page. Filled in automatically when you use Send to courier.</div>
           </div>
         </div>
         <div class="field">
@@ -226,3 +318,74 @@
 </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+/* Send to courier: show the area picker only for couriers that need one. */
+(function () {
+  var form = document.getElementById('courierForm');
+  if (!form) return;
+
+  var pick   = document.getElementById('courier_code');
+  var box    = document.getElementById('courierArea');
+  var search = document.getElementById('area_search');
+  var list   = document.getElementById('area_pick');
+  var idBox  = document.getElementById('area_id');
+  var nmBox  = document.getElementById('area_name');
+  var hint   = document.getElementById('area_hint');
+  var timer  = null;
+
+  function needsArea() {
+    var o = pick.options[pick.selectedIndex];
+    return !!o && o.getAttribute('data-area') === '1';
+  }
+
+  function sync() { box.hidden = !needsArea(); }
+  pick.addEventListener('change', sync);
+  sync();
+
+  search.addEventListener('input', function () {
+    clearTimeout(timer);
+    idBox.value = ''; nmBox.value = '';
+    var q = search.value.trim();
+    if (q.length < 2) { list.style.display = 'none'; return; }
+
+    timer = setTimeout(function () {
+      var url = search.getAttribute('data-url').replace('__CODE__', encodeURIComponent(pick.value)) + '?q=' + encodeURIComponent(q);
+      fetch(url, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          list.innerHTML = '';
+          if (data.error) { hint.textContent = data.error; list.style.display = 'none'; return; }
+          (data.areas || []).forEach(function (a) {
+            var o = document.createElement('option');
+            o.value = a.id; o.textContent = a.name; o.setAttribute('data-area', a.area || a.name);
+            list.appendChild(o);
+          });
+          list.style.display = list.options.length ? '' : 'none';
+          hint.textContent = list.options.length ? 'Click the matching area.' : 'No area matches that. Try a shorter word.';
+        })
+        .catch(function () { hint.textContent = 'Could not load the area list. Try again.'; });
+    }, 300);
+  });
+
+  list.addEventListener('change', function () {
+    var o = list.options[list.selectedIndex];
+    if (!o) return;
+    idBox.value = o.value;
+    nmBox.value = o.getAttribute('data-area');
+    search.value = o.textContent;
+    list.style.display = 'none';
+    hint.textContent = 'Area chosen.';
+  });
+
+  form.addEventListener('submit', function (e) {
+    if (needsArea() && !idBox.value) {
+      e.preventDefault();
+      hint.textContent = 'Choose a delivery area from the list first.';
+      search.focus();
+    }
+  });
+})();
+</script>
+@endpush
