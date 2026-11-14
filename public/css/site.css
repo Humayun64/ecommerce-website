@@ -707,3 +707,83 @@ footer a:hover{color:var(--gold)}
   background:#FCF6E8;border:1px solid var(--gold-pale);border-left:3px solid var(--gold);border-radius:4px;padding:13px 16px;font-size:14px;color:var(--gold-deep);text-align:left}
 .paynote.ok{background:#E9F5EE;border-color:#BFE0CD;border-left-color:var(--ok);color:#12603A;font-weight:600;justify-content:center}
 .paynote .btn{height:42px;padding:0 20px;font-size:14px}
+
+/* ============ footer (redesign) ============ */
+footer.ft{position:relative;padding:0;background:var(--navy-deep);color:#A8B4C8;font-size:14px}
+
+/* perks band */
+.ft-perks{background:linear-gradient(90deg,#DFA327,#F0C461 45%,#E9B23C);color:var(--navy-deep)}
+.ft-perks .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.ft-perk{display:flex;align-items:center;gap:12px;padding:18px 16px;font-size:12.5px;line-height:1.4;color:#4A3406}
+.ft-perk + .ft-perk{border-left:1px solid rgba(12,28,54,.14)}
+.ft-perk b{display:block;font-family:var(--display);font-variation-settings:"wdth" 108;font-size:14px;font-weight:700;color:var(--navy-deep)}
+.ft-perk-ic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;flex-shrink:0;background:var(--navy-deep);color:var(--gold);
+  box-shadow:0 8px 16px -10px rgba(12,28,54,.8);transition:transform .2s}
+.ft-perk-ic svg{width:21px;height:21px}
+.ft-perk:hover .ft-perk-ic{transform:translateY(-2px) rotate(-4deg)}
+@media(max-width:900px){.ft-perks .wrap{grid-template-columns:1fr 1fr}.ft-perk:nth-child(3){border-left:0}.ft-perk:nth-child(n+3){border-top:1px solid rgba(12,28,54,.14)}}
+@media(max-width:480px){.ft-perks .wrap{grid-template-columns:1fr}.ft-perk + .ft-perk{border-left:0;border-top:1px solid rgba(12,28,54,.14)}}
+
+/* main block */
+.ft-main{position:relative;overflow:hidden;padding:44px 0 0;
+  background:radial-gradient(620px 320px at 8% 0,rgba(46,107,224,.30),transparent 70%),
+             radial-gradient(560px 300px at 100% 100%,rgba(223,163,39,.16),transparent 70%),
+             linear-gradient(180deg,#0E2242,#0A1830)}
+.ft-main::before{content:"";position:absolute;right:-120px;top:-120px;width:340px;height:340px;border-radius:50%;border:1.5px dashed rgba(255,255,255,.08);pointer-events:none}
+.ft-main > .wrap{position:relative;z-index:1}
+
+.ft-cta{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:40px;padding:22px 26px;border-radius:14px;
+  background:linear-gradient(120deg,rgba(30,64,121,.95),rgba(20,48,90,.75));box-shadow:inset 0 0 0 1px rgba(255,255,255,.10),0 24px 40px -30px rgba(0,0,0,.8)}
+.ft-cta h3{font-size:19px;color:#fff;margin:0 0 5px}
+.ft-cta p{margin:0;font-size:13.5px;color:#C2CEE2;max-width:52ch}
+.ft-cta-act{display:flex;gap:10px;flex-wrap:wrap}
+.ft-btn{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 18px;border-radius:9px;font-size:14px;font-weight:600;white-space:nowrap;transition:transform .15s,box-shadow .2s,background .15s}
+.ft-btn svg{width:18px;height:18px}
+.ft-btn:hover{transform:translateY(-2px)}
+.ft-btn-wa{background:#1FAF5A;color:#fff;box-shadow:0 10px 20px -12px rgba(31,175,90,.95)}
+.ft-btn-wa:hover{background:#25C266;color:#fff}
+.ft-btn-line{color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.30)}
+.ft-btn-line:hover{background:rgba(255,255,255,.08);color:#fff}
+
+footer.ft .fg{padding-bottom:38px}
+footer.ft h4{position:relative;font-size:14.5px;margin:0 0 20px;padding-bottom:11px}
+footer.ft h4::after{content:"";position:absolute;left:0;bottom:0;width:30px;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--gold),#F0C461);transition:width .25s}
+footer.ft .fg > div:hover h4::after{width:54px}
+.ft-brand .fab{color:#B6C2D8}
+.ft-dot{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;background:rgba(223,163,39,.12);box-shadow:inset 0 0 0 1px rgba(223,163,39,.26);color:var(--gold)}
+footer.ft .fc li{align-items:center;gap:11px;margin-bottom:10px;color:#D3DCEA}
+footer.ft .fc .ft-dot svg{margin:0}
+.ft-links a{display:inline-flex;align-items:center;gap:0;color:#A8B4C8;transition:color .15s,gap .2s,transform .2s}
+.ft-links a::before{content:"";width:0;height:2px;border-radius:2px;background:var(--gold);transition:width .2s}
+.ft-links a:hover{color:#fff;gap:8px}
+.ft-links a:hover::before{width:12px}
+
+.ft-social{display:grid;gap:9px}
+.ft-soc{--c:#1E5BD8;display:flex;align-items:center;gap:11px;padding:6px 12px 6px 6px;border-radius:10px;font-size:13.5px;font-weight:600;color:#DDE4EF;
+  background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);transition:transform .15s,background .15s,box-shadow .15s}
+.ft-soc-ic{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:#fff;background:var(--c);flex-shrink:0}
+.ft-soc-ic svg{width:17px;height:17px}
+.ft-soc:hover{transform:translateX(3px);background:rgba(255,255,255,.09);color:#fff;box-shadow:inset 0 0 0 1px var(--c)}
+.ft-soc.s-facebook{--c:#1877F2}
+.ft-soc.s-instagram{--c:#D6297B}
+.ft-soc.s-instagram .ft-soc-ic{background:linear-gradient(45deg,#F9A13B,#E1306C 50%,#7B3FD1)}
+.ft-soc.s-youtube{--c:#E62117}
+.ft-soc.s-whatsapp{--c:#1FAF5A}
+
+footer.ft .pay{border-top:1px solid rgba(255,255,255,.10);padding:20px 0 22px}
+footer.ft .chip{display:inline-flex;align-items:center;gap:7px;border-radius:7px;padding:6px 11px;background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);color:#E6ECF5}
+footer.ft .chip::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--d,#8E9BB0)}
+footer.ft .chip.c-cod{--d:#2FBF71}
+footer.ft .chip.c-bkash{--d:#E2136E}
+footer.ft .chip.c-nagad{--d:#EE7622}
+footer.ft .chip.c-rocket{--d:#A64DD0}
+footer.ft .chip.c-visa{--d:#4C7DF0}
+footer.ft .chip.c-mc::before{width:14px;border-radius:8px;background:linear-gradient(90deg,#EB001B 50%,#F79E1B 50%)}
+
+.ft-top{position:fixed;right:18px;bottom:18px;z-index:40;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--gold);color:var(--navy-deep);
+  box-shadow:0 12px 24px -10px rgba(12,28,54,.6);opacity:0;visibility:hidden;transform:translateY(10px);transition:opacity .2s,transform .2s,visibility .2s,background .15s}
+.ft-top svg{width:20px;height:20px}
+.ft-top.on{opacity:1;visibility:visible;transform:none}
+.ft-top:hover{background:#EFB33A;color:var(--navy-deep)}
+@media(max-width:640px){.ft-cta{padding:20px}.ft-cta-act{width:100%}.ft-btn{flex:1;justify-content:center}}
+@media(prefers-reduced-motion:reduce){.ft-btn:hover,.ft-soc:hover,.ft-perk:hover .ft-perk-ic{transform:none}}
