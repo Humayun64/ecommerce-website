@@ -91,6 +91,8 @@
 
         @foreach ([1, 2] as $column)
           @php $links = ($footerMenu ?? collect())->get($column, collect()); @endphp
+          {{-- A column with no links is left out, rather than showing a bare heading. --}}
+          @continue($links->isEmpty())
           <div>
             <h4>{{ $settings['footer_col' . $column . '_title'] ?? ($column === 1 ? __('Shop') : __('Your order')) }}</h4>
             <ul class="ft-links">
@@ -149,8 +151,14 @@
 (function () {
   var top = document.getElementById('ftTop');
   if (!top) return;
-  function show() { top.classList.toggle('on', window.scrollY > 600); }
+  // Shown once the visitor has scrolled a screen or so, and tucked away
+  // again at the very bottom so it never sits on top of the payment row.
+  function show() {
+    var fromBottom = document.documentElement.scrollHeight - (window.scrollY + window.innerHeight);
+    top.classList.toggle('on', window.scrollY > 600 && fromBottom > 110);
+  }
   window.addEventListener('scroll', show, { passive: true });
+  window.addEventListener('resize', show, { passive: true });
   show();
   top.addEventListener('click', function (e) {
     e.preventDefault();
