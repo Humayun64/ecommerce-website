@@ -178,6 +178,7 @@ Route::middleware(['auth', 'admin'])
         Route::get('reports/export', [ReportController::class, 'export'])->name('reports.export');
 
         Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses.index');
+        Route::get('expenses/export', [ExpenseController::class, 'export'])->name('expenses.export');
         Route::post('expenses', [ExpenseController::class, 'store'])->name('expenses.store');
         Route::delete('expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
 
