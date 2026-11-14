@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ContactController as AdminContactController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\BlogCategoryController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EmailController;
 use App\Http\Controllers\Admin\ExpenseController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\MenuController;
@@ -191,6 +192,10 @@ Route::middleware(['auth', 'admin'])
         Route::patch('orders/{order}/delivery', [OrderController::class, 'updateDelivery'])->name('orders.delivery');
         Route::post('orders/{order}/courier', [CourierController::class, 'book'])->name('orders.courier');
         Route::post('orders/{order}/courier/sync', [CourierController::class, 'sync'])->name('orders.courier.sync');
+
+        Route::get('email', [EmailController::class, 'edit'])->name('email.edit');
+        Route::put('email', [EmailController::class, 'update'])->name('email.update');
+        Route::post('email/test', [EmailController::class, 'test'])->middleware('throttle:6,1')->name('email.test');
 
         Route::get('couriers', [CourierController::class, 'index'])->name('couriers.index');
         Route::post('couriers/sync', [CourierController::class, 'syncAll'])->name('couriers.sync');

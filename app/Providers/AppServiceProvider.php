@@ -30,6 +30,14 @@ class AppServiceProvider extends ServiceProvider
         // Store settings are needed by nearly every view, so share them once.
         View::share('settings', Setting::all_cached());
 
+        // Outgoing email is set up in the admin panel. A mistake there must
+        // never stop the site from loading, so it is applied inside a guard.
+        try {
+            app(\App\Services\MailSettings::class)->apply();
+        } catch (\Throwable $e) {
+            // Fall back to whatever .env says.
+        }
+
         // Menus and the cart badge, on every storefront page.
         View::composer('site.*', function ($view) {
             $header = collect();

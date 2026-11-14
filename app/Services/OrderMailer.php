@@ -17,11 +17,17 @@ class OrderMailer
 {
     public function placed(Order $order): void
     {
-        if (! $order->customer_email) {
-            return;
+        if ($order->customer_email) {
+            $this->send($order->customer_email, new OrderPlaced($order), $order);
         }
 
-        $this->send($order->customer_email, new OrderPlaced($order), $order);
+        // A copy for the shop, if that is switched on in Admin > Email. It
+        // is its own email, so a problem with it cannot affect the customer's.
+        $admin = app(MailSettings::class)->adminCopyTo();
+
+        if ($admin && strcasecmp($admin, (string) $order->customer_email) !== 0) {
+            $this->send($admin, new OrderPlaced($order), $order);
+        }
     }
 
     public function statusChanged(Order $order, string $status): void

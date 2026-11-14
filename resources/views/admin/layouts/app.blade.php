@@ -121,6 +121,10 @@
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3.5" width="18" height="17" rx="2"/><circle cx="12" cy="10" r="2.6"/><path d="M7.5 17a4.6 4.6 0 019 0"/></svg>
         Contact page
       </a>
+      <a href="{{ route('admin.email.edit') }}" class="item {{ request()->routeIs('admin.email.*') ? 'on' : '' }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+        Email
+      </a>
       <a href="{{ route('admin.sms.index') }}" class="item {{ request()->routeIs('admin.sms.*') ? 'on' : '' }}">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8 8 0 01-11.6 7.1L4 20.5l1.9-5A8 8 0 1121 11.5z"/><path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01"/></svg>
         SMS
