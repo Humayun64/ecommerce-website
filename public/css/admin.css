@@ -349,3 +349,12 @@ input[type=file]:hover{border-color:var(--navy)}
 
 /* password and email boxes were missing from the form rules */
 .field input[type=password],.field input[type=email]{width:100%;border:1.5px solid var(--line);border-radius:3px;padding:10px 12px;font:inherit;font-size:14.5px;background:#fff;color:var(--ink)}
+
+/* ============ phones: wide tables scroll inside their panel, tidy top bar ============ */
+@media(max-width:820px){
+  .panel{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .top{gap:10px}
+  .top h1{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .top .who > div:not(.avatar){display:none}
+  .top .btn{white-space:nowrap}
+}

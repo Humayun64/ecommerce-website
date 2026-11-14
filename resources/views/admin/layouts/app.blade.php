@@ -145,17 +145,20 @@
 
     try {
       var saved = JSON.parse(sessionStorage.getItem(KEY) || 'null');
-      if (saved) boxes.forEach(function (box, i) { box.scrollTop = saved[i] || 0; });
+      if (saved) boxes.forEach(function (box, i) { var at = saved[i] || [0, 0]; box.scrollTop = at[0] || 0; box.scrollLeft = at[1] || 0; });
     } catch (e) {}
 
     var on = document.querySelector('.side .item.on');
     if (on) {
       var r = on.getBoundingClientRect();
-      if (r.top < 0 || r.bottom > window.innerHeight) on.scrollIntoView({ block: 'center' });
+      // On a phone the menu is a strip that scrolls sideways instead.
+      if (r.top < 0 || r.bottom > window.innerHeight || r.left < 0 || r.right > window.innerWidth) {
+        on.scrollIntoView({ block: 'nearest', inline: 'center' });
+      }
     }
 
     function save() {
-      try { sessionStorage.setItem(KEY, JSON.stringify(boxes.map(function (box) { return box.scrollTop; }))); } catch (e) {}
+      try { sessionStorage.setItem(KEY, JSON.stringify(boxes.map(function (box) { return [box.scrollTop, box.scrollLeft]; }))); } catch (e) {}
     }
     boxes.forEach(function (box) { box.addEventListener('scroll', save, { passive: true }); });
     window.addEventListener('pagehide', save);
