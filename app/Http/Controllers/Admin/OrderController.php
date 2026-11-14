@@ -34,8 +34,12 @@ class OrderController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        $counts = Order::selectRaw('status, count(*) as total')
-            ->groupBy('status')->pluck('total', 'status');
+        // Not aliased as "total": the Order model casts that name to a
+        // two-decimal price, which printed the tab counts as 1.00 and 2.00.
+        $counts = Order::query()->toBase()
+            ->selectRaw('status, count(*) as n')
+            ->groupBy('status')->pluck('n', 'status')
+            ->map(fn ($n) => (int) $n);
 
         return view('admin.orders.index', compact('orders', 'counts'));
     }

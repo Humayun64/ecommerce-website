@@ -65,19 +65,15 @@ class AppServiceProvider extends ServiceProvider
                  ->with('cartCount', $cartCount);
         });
 
-        // The badge on the admin sidebar: returns still waiting on a decision.
-        View::composer('admin.*', function ($view) {
-            $view->with('pendingReturns', Schema::hasTable('return_requests')
-                ? ReturnRequest::where('status', 'pending')->count()
-                : 0);
+        // The badges on the admin menu and the bell: everything still
+        // waiting on a person. Counted once per page.
+        View::composer('admin.layouts.app', function ($view) {
+            $counts = app(\App\Services\AdminAlerts::class)->counts();
 
-            $view->with('pendingPayments', Schema::hasTable('payments')
-                ? Payment::where('status', 'pending')->count()
-                : 0);
-
-            $view->with('unreadMessages', Schema::hasTable('contact_messages')
-                ? ContactMessage::where('status', 'new')->count()
-                : 0);
+            $view->with('alertCounts', $counts)
+                 ->with('pendingReturns', $counts['returns'])
+                 ->with('pendingPayments', $counts['payments'])
+                 ->with('unreadMessages', $counts['messages']);
         });
 
         // The tracking pixels are put into the page by middleware rather than
