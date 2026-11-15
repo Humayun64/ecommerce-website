@@ -4,13 +4,16 @@
 @section('content')
 <div class="panel">
   <div class="panel-head">
-    <h2>{{ $products->total() }} products</h2>
+    <div>
+      <h2>{{ $products->total() }} product{{ $products->total() === 1 ? '' : 's' }}</h2>
+      <span class="sub">{{ $published }} published · {{ $drafts }} draft{{ $drafts === 1 ? '' : 's' }}</span>
+    </div>
     <a href="{{ route('admin.products.create') }}" class="btn btn-gold btn-sm">Add product</a>
   </div>
 
   <div class="panel-body" style="border-bottom:1px solid var(--line)">
     <form method="GET" class="filters">
-      <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name or SKU">
+      <input type="search" name="search" value="{{ request('search') }}" placeholder="Search by product name, SKU or brand" maxlength="100" class="pf-search" aria-label="Search products">
       <select name="brand">
         <option value="">All brands</option>
         @foreach ($brands as $brand)
@@ -25,10 +28,12 @@
       </select>
       <select name="status">
         <option value="">Any status</option>
+        <option value="published" @selected(request('status') === 'published')>Published</option>
+        <option value="draft" @selected(in_array(request('status'), ['draft', 'inactive']))>Draft</option>
+        <option value="featured" @selected(request('status') === 'featured')>Featured</option>
         <option value="low" @selected(request('status') === 'low')>Low stock</option>
-        <option value="inactive" @selected(request('status') === 'inactive')>Hidden</option>
       </select>
-      <button class="btn btn-navy btn-sm">Filter</button>
+      <button class="btn btn-navy btn-sm">Search</button>
       @if (request()->hasAny(['search', 'brand', 'category', 'status']))
         <a href="{{ route('admin.products.index') }}" class="btn btn-line btn-sm">Clear</a>
       @endif
@@ -60,7 +65,7 @@
                 <div class="thumb-empty">No<br>photo</div>
               @endif
               <div>
-                <strong>{{ $product->name }}</strong>
+                <a href="{{ route('admin.products.edit', $product) }}" style="color:inherit"><strong>{{ $product->name }}</strong></a>
                 <div class="sub">
                   {{ $product->sku }}
                   @if ($product->has_variants) · {{ $product->variants->count() }} sizes @endif
@@ -96,10 +101,12 @@
             @else
               <span class="badge b-on">In stock</span>
             @endif
-            @unless ($product->is_active)<span class="badge b-off">Hidden</span>@endunless
+            @unless ($product->is_active)<span class="badge b-off">Draft</span>@endunless
             @if ($product->is_featured)<span class="badge b-gold">Featured</span>@endif
           </td>
-          <td class="right">
+          <td class="right" style="white-space:nowrap">
+            <a href="{{ route('shop.product', $product) }}" target="_blank" rel="noopener" class="btn btn-line btn-sm"
+               title="{{ $product->is_active ? 'Open the product page in the shop' : 'Preview the draft (only you can see it)' }}">{{ $product->is_active ? 'View' : 'Preview' }}</a>
             <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-line btn-sm">Edit</a>
           </td>
         </tr>

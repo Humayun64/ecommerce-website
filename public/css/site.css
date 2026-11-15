@@ -954,3 +954,20 @@ footer.ft .chip.c-mc::before{width:14px;border-radius:8px;background:linear-grad
   .hm .cats:has(> .cat:nth-child(2):last-child){grid-template-columns:repeat(2,1fr)}
   .hm .cats:has(> .cat:nth-child(1):last-child){grid-template-columns:1fr}
 }
+
+/* ============ floating WhatsApp chat button ============ */
+.wa-fab{position:fixed;right:18px;bottom:18px;z-index:45;display:flex;align-items:center;gap:0;height:54px;min-width:54px;padding:0 15px;border-radius:27px;
+  background:#25D366;color:#fff;font-weight:700;font-size:14px;box-shadow:0 14px 28px -10px rgba(18,140,74,.75),0 0 0 0 rgba(37,211,102,.5);
+  animation:waPulse 2.6s ease-out infinite;transition:background .15s,transform .15s}
+.wa-fab:hover{background:#1EBE5A;color:#fff;transform:translateY(-2px)}
+.wa-fab svg{width:25px;height:25px;flex-shrink:0}
+.wa-fab svg path{fill:#fff}
+.wa-fab svg circle{fill:#25D366}
+.wa-fab span{max-width:0;overflow:hidden;white-space:nowrap;opacity:0;transition:max-width .25s ease,opacity .2s,margin .25s}
+.wa-fab:hover span,.wa-fab:focus-visible span{max-width:170px;opacity:1;margin-left:9px}
+/* The back-to-top arrow moves up so the two never overlap. */
+body:has(.wa-fab) .ft-top{bottom:84px;right:23px}
+@keyframes waPulse{0%{box-shadow:0 14px 28px -10px rgba(18,140,74,.75),0 0 0 0 rgba(37,211,102,.5)}70%,100%{box-shadow:0 14px 28px -10px rgba(18,140,74,.75),0 0 0 14px rgba(37,211,102,0)}}
+@media(max-width:560px){.wa-fab{right:14px;bottom:14px;height:50px;min-width:50px;padding:0 13px}.wa-fab span{display:none}body:has(.wa-fab) .ft-top{bottom:74px;right:17px}}
+@media(prefers-reduced-motion:reduce){.wa-fab{animation:none}}
+@media print{.wa-fab{display:none}}

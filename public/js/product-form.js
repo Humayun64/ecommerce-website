@@ -250,3 +250,137 @@
   });
   refreshSeo();
 })();
+
+/* Images: show what was picked before it is uploaded, and the publish status colour. */
+(function () {
+  'use strict';
+
+  var MAX_FILES = 12;
+  var MAX_BYTES = 6 * 1024 * 1024;
+  var TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+  function problem(file) {
+    if (TYPES.indexOf(file.type) === -1) return file.name + ' is not a JPG, PNG or WebP image.';
+    if (file.size > MAX_BYTES) return file.name + ' is larger than 6 MB.';
+    return '';
+  }
+
+  /* ---- main image ---- */
+  var mainInput = document.getElementById('main_image');
+  var mainImg   = document.getElementById('piMainImg');
+  var note      = document.getElementById('piNote');
+
+  if (mainInput && mainImg) {
+    var original = mainImg.getAttribute('src') || '';
+
+    mainInput.addEventListener('change', function () {
+      var file = mainInput.files[0];
+      var tag = document.getElementById('piMainTag');
+      var empty = document.getElementById('piMainEmpty');
+
+      if (file && problem(file)) {
+        window.alert(problem(file));
+        mainInput.value = '';
+        file = null;
+      }
+
+      if (!file) {
+        mainImg.hidden = original === '';
+        if (original) mainImg.src = original;
+        empty.hidden = original !== '';
+        if (tag) { tag.textContent = 'Main'; tag.hidden = original === ''; }
+        return;
+      }
+
+      mainImg.src = URL.createObjectURL(file);
+      mainImg.hidden = false;
+      empty.hidden = true;
+      if (tag) { tag.textContent = 'New main'; tag.hidden = false; }
+      if (note) note.hidden = false;
+    });
+  }
+
+  /* ---- gallery ---- */
+  var input = document.getElementById('images');
+  var grid  = document.getElementById('piGrid');
+  var add   = document.getElementById('piAdd');
+
+  if (input && grid && add && window.DataTransfer) {
+    var picked = [];
+
+    // The file box only ever holds the last pick, so the full list is kept
+    // here and written back each time.
+    function write() {
+      var data = new DataTransfer();
+      picked.forEach(function (file) { data.items.add(file); });
+      input.files = data.files;
+    }
+
+    function draw() {
+      grid.querySelectorAll('.pi-cell.is-new').forEach(function (cell) { cell.remove(); });
+
+      picked.forEach(function (file, index) {
+        var cell = document.createElement('div');
+        cell.className = 'pi-cell is-new';
+
+        var img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        img.alt = '';
+        img.onload = function () { URL.revokeObjectURL(img.src); };
+
+        var tag = document.createElement('span');
+        tag.className = 'badge b-on pi-tag';
+        tag.textContent = 'New';
+
+        var acts = document.createElement('div');
+        acts.className = 'pi-acts';
+        var remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'btn btn-line btn-sm';
+        remove.textContent = 'Take out';
+        remove.addEventListener('click', function () { picked.splice(index, 1); write(); draw(); });
+        acts.appendChild(remove);
+
+        cell.appendChild(img); cell.appendChild(tag); cell.appendChild(acts);
+        grid.insertBefore(cell, add);
+      });
+
+      if (note && picked.length) note.hidden = false;
+    }
+
+    input.addEventListener('change', function () {
+      var errors = [];
+
+      Array.prototype.forEach.call(input.files, function (file) {
+        var why = problem(file);
+        var twice = picked.some(function (p) { return p.name === file.name && p.size === file.size && p.lastModified === file.lastModified; });
+
+        if (why) { errors.push(why); return; }
+        if (twice) return;
+        if (picked.length >= MAX_FILES) { errors.push('Only ' + MAX_FILES + ' images can be added at a time.'); return; }
+        picked.push(file);
+      });
+
+      write();
+      draw();
+
+      if (errors.length) {
+        window.alert(errors.filter(function (e, i) { return errors.indexOf(e) === i; }).join('\n'));
+      }
+    });
+  }
+
+  /* ---- publish status ---- */
+  var status = document.getElementById('is_active');
+  var hint = document.getElementById('pubHint');
+
+  if (status) {
+    status.addEventListener('change', function () {
+      var live = status.value === '1';
+      status.classList.toggle('is-live', live);
+      status.classList.toggle('is-draft', !live);
+      if (hint) hint.textContent = live ? 'Customers can see and buy it.' : 'Hidden from the shop. Only you can preview it.';
+    });
+  }
+})();
+

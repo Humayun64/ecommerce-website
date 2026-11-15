@@ -11,13 +11,19 @@
 @endsection
 
 @push('head')
-  @unless ($product->is_indexable)<meta name="robots" content="noindex">@endunless
+  @unless ($product->is_indexable && $product->is_active)<meta name="robots" content="noindex">@endunless
   @if ($product->canonical_url)<link rel="canonical" href="{{ $product->canonical_url }}">@endif
   <link rel="stylesheet" href="{{ asset('css/product.css') }}">
   <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 @endpush
 
 @section('content')
+
+@unless ($product->is_active)
+  <div style="background:#FDF4DE;border-bottom:1px solid #EBCB85;color:#6B4A05;text-align:center;padding:10px 16px;font-size:14px;font-weight:600">
+    Draft preview — only you can see this page. Customers will see it once the product is published.
+  </div>
+@endunless
 
 @php
   $ratingCount = $product->rating_count;

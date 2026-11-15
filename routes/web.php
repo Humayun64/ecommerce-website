@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\AlertController;
+use App\Http\Controllers\Admin\WhatsAppController;
 use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -199,6 +200,10 @@ Route::middleware(['auth', 'admin'])
         Route::get('email', [EmailController::class, 'edit'])->name('email.edit');
         Route::put('email', [EmailController::class, 'update'])->name('email.update');
         Route::post('email/test', [EmailController::class, 'test'])->middleware('throttle:6,1')->name('email.test');
+
+        Route::get('whatsapp', [WhatsAppController::class, 'edit'])->name('whatsapp.edit');
+        Route::put('whatsapp', [WhatsAppController::class, 'update'])->name('whatsapp.update');
+        Route::post('whatsapp/test', [WhatsAppController::class, 'test'])->middleware('throttle:6,1')->name('whatsapp.test');
 
         Route::get('couriers', [CourierController::class, 'index'])->name('couriers.index');
         Route::post('couriers/sync', [CourierController::class, 'syncAll'])->name('couriers.sync');

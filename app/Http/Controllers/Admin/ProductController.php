@@ -24,11 +24,21 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $products = Product::with(['brand', 'category', 'variants', 'primaryImage', 'deliveryTier'])
-            ->when($request->search, fn ($q, $term) => $q->where(fn ($sub) =>
-                $sub->where('name', 'like', "%{$term}%")->orWhere('sku', 'like', "%{$term}%")))
+            ->when(trim((string) $request->search), function ($q, $term) {
+                // % and _ are wildcards in LIKE; escaped so they are searched as typed.
+                $like = '%' . addcslashes($term, '%_\\') . '%';
+
+                $q->where(fn ($sub) => $sub
+                    ->where('name', 'like', $like)
+                    ->orWhere('sku', 'like', $like)
+                    ->orWhereHas('brand', fn ($b) => $b->where('name', 'like', $like))
+                    ->orWhereHas('variants', fn ($v) => $v->where('sku', 'like', $like)));
+            })
             ->when($request->brand, fn ($q, $id) => $q->where('brand_id', $id))
             ->when($request->category, fn ($q, $id) => $q->where('category_id', $id))
-            ->when($request->status === 'inactive', fn ($q) => $q->where('is_active', false))
+            ->when($request->status === 'published', fn ($q) => $q->where('is_active', true))
+            ->when(in_array($request->status, ['draft', 'inactive'], true), fn ($q) => $q->where('is_active', false))
+            ->when($request->status === 'featured', fn ($q) => $q->where('is_featured', true))
             ->when($request->status === 'low', fn ($q) => $q->whereColumn('stock', '<=', 'low_stock_threshold'))
             ->orderBy('name')
             ->paginate(20)
@@ -38,6 +48,8 @@ class ProductController extends Controller
             'products'   => $products,
             'brands'     => Brand::orderBy('name')->get(),
             'categories' => Category::with('parent')->orderBy('name')->get(),
+            'published'  => Product::where('is_active', true)->count(),
+            'drafts'     => Product::where('is_active', false)->count(),
         ]);
     }
 
@@ -65,7 +77,9 @@ class ProductController extends Controller
         });
 
         return redirect()->route('admin.products.edit', $product)
-            ->with('status', 'Product created. Add images and check the SEO panel before it goes live.');
+            ->with('status', $product->is_active
+                ? 'Product created and published. Check the images and the SEO panel.'
+                : 'Product saved as a draft. Customers cannot see it until you publish it.');
     }
 
     public function edit(Product $product)
@@ -86,7 +100,7 @@ class ProductController extends Controller
         });
 
         return redirect()->route('admin.products.index')
-            ->with('status', 'Product updated.');
+            ->with('status', $product->is_active ? 'Product updated.' : 'Product updated. It is a draft, so customers cannot see it.');
     }
 
     public function destroy(Product $product)
@@ -159,7 +173,7 @@ class ProductController extends Controller
 
     private function attributesFor(ProductRequest $request): array
     {
-        $data = $request->safe()->except(['variants', 'images', 'attribute_ids']);
+        $data = $request->safe()->except(['variants', 'images', 'main_image', 'attribute_ids']);
 
         $variants = collect($request->input('variants', []))
             ->filter(fn ($v) => filled($v['price'] ?? null) || filled($v['name'] ?? null));
@@ -237,6 +251,19 @@ class ProductController extends Controller
 
     private function storeImages(Product $product, ProductRequest $request): void
     {
+        // A new main image takes the place of the old one, which stays in
+        // the gallery.
+        if ($request->hasFile('main_image')) {
+            $product->images()->update(['is_primary' => false]);
+
+            $product->images()->create([
+                'path'       => $this->images->store($request->file('main_image')),
+                'alt'        => $product->name,
+                'is_primary' => true,
+                'sort_order' => (int) $product->images()->min('sort_order') - 1,
+            ]);
+        }
+
         if (! $request->hasFile('images')) {
             return;
         }

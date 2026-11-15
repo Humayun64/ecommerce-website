@@ -137,6 +137,9 @@ class CheckoutController extends Controller
         // Sent after the transaction committed, never inside it.
         $this->mailer->placed($order);
 
+        // And a WhatsApp message to the owner, if that is switched on.
+        app(\App\Services\WhatsApp::class)->orderPlaced($order);
+
         // Held in the session so the confirmation page can be shown once
         // without exposing every order number to anyone who guesses one.
         session()->put('recent_order', $order->id);

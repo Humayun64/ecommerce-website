@@ -252,38 +252,70 @@
   </div>
 
   {{-- ---------- images ---------- --}}
+  @php
+    $mainImage = $product->exists ? $product->images->firstWhere('is_primary', true) : null;
+    $gallery   = $product->exists ? $product->images->where('is_primary', false) : collect();
+  @endphp
   <div class="panel">
-    <div class="panel-head"><h2>Images</h2></div>
+    <div class="panel-head">
+      <div>
+        <h2>Images</h2>
+        <span class="sub">One main image, plus a gallery of extra photos</span>
+      </div>
+      @if ($product->exists)<span class="sub">{{ $product->images->count() }} saved</span>@endif
+    </div>
     <div class="panel-body">
+      <div class="pi">
 
-      @if ($product->exists && $product->images->count())
-        <div class="imgrid">
-          @foreach ($product->images as $image)
-            <div class="imgcell {{ $image->is_primary ? 'main' : '' }}">
-              <img src="{{ $image->url }}" alt="{{ $image->alt }}">
-              @if ($image->is_primary)<span class="badge b-gold imgtag">Main</span>@endif
-              <div class="imgacts">
-                @if (! $image->is_primary)
+        {{-- main image --}}
+        <div class="pi-main">
+          <label for="main_image">Main image</label>
+          <div class="pi-frame {{ $mainImage ? 'has' : '' }}" id="piMainFrame">
+            <img id="piMainImg" src="{{ $mainImage?->url }}" alt="" @unless ($mainImage) hidden @endunless>
+            <div class="pi-empty" id="piMainEmpty" @if ($mainImage) hidden @endif>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 9"/></svg>
+              No main image yet
+            </div>
+            <span class="badge b-gold pi-tag" id="piMainTag" @unless ($mainImage) hidden @endunless>Main</span>
+          </div>
+          <label for="main_image" class="btn btn-line btn-sm pi-pick">{{ $mainImage ? 'Change main image' : 'Choose main image' }}</label>
+          <input type="file" id="main_image" name="main_image" accept="image/jpeg,image/png,image/webp" class="pi-file">
+          @if ($mainImage)
+            <button type="button" class="pi-remove"
+                    onclick="if(confirm('Remove the main image?')) document.getElementById('del-{{ $mainImage->id }}').submit()">Remove main image</button>
+          @endif
+          <div class="hint">Shown on product cards and first on the product page.</div>
+        </div>
+
+        {{-- gallery --}}
+        <div class="pi-gal">
+          <label for="images">Gallery images</label>
+          <div class="pi-grid" id="piGrid">
+            @foreach ($gallery as $image)
+              <div class="pi-cell">
+                <img src="{{ $image->url }}" alt="{{ $image->alt }}" loading="lazy">
+                <div class="pi-acts">
                   <button type="button" class="btn btn-line btn-sm"
                           onclick="document.getElementById('primary-{{ $image->id }}').submit()">Make main</button>
-                @endif
-                <button type="button" class="btn btn-danger btn-sm"
-                        onclick="if(confirm('Remove this image?')) document.getElementById('del-{{ $image->id }}').submit()">Remove</button>
+                  <button type="button" class="btn btn-danger btn-sm" aria-label="Remove image"
+                          onclick="if(confirm('Remove this image?')) document.getElementById('del-{{ $image->id }}').submit()">Remove</button>
+                </div>
               </div>
-            </div>
-          @endforeach
+            @endforeach
+            <label for="images" class="pi-add" id="piAdd">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              Add images
+            </label>
+          </div>
+          <input type="file" id="images" name="images[]" multiple accept="image/jpeg,image/png,image/webp" class="pi-file">
+          <div class="hint">
+            Up to 12 at a time, 6 MB each (JPG, PNG or WebP). Square photos on a plain background work best.
+            Large photos are resized automatically, so upload straight from your phone.
+          </div>
+          <div class="hint pi-new" id="piNote" hidden>New images are uploaded when you press <b>{{ $submit }}</b>.</div>
         </div>
-      @endif
 
-      <div class="field" style="margin-top:16px">
-        <label for="images">Upload images</label>
-        <input type="file" id="images" name="images[]" multiple accept="image/jpeg,image/png,image/webp">
-        <div class="hint">
-          Up to 8 at a time, 6 MB each. Square photos on a plain background work best.
-          Large images are automatically resized down to 1400px, so upload straight from your phone.
-        </div>
       </div>
-
     </div>
   </div>
 
@@ -359,11 +391,14 @@
   <div class="panel">
     <div class="panel-head"><h2>Publish</h2></div>
     <div class="panel-body">
+      @php $live = (bool) old('is_active', $product->is_active ?? true); @endphp
       <div class="field">
-        <label class="check">
-          <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $product->is_active ?? true))>
-          Visible on the storefront
-        </label>
+        <label for="is_active">Status</label>
+        <select id="is_active" name="is_active" class="pub-select {{ $live ? 'is-live' : 'is-draft' }}">
+          <option value="1" @selected($live)>Published</option>
+          <option value="0" @selected(! $live)>Draft</option>
+        </select>
+        <div class="hint" id="pubHint">{{ $live ? 'Customers can see and buy it.' : 'Hidden from the shop. Only you can preview it.' }}</div>
       </div>
       <div class="field" style="margin-bottom:8px">
         <label class="check">
@@ -373,6 +408,9 @@
       </div>
       <div class="form-actions" style="flex-direction:column">
         <button type="submit" class="btn btn-gold" style="width:100%">{{ $submit }}</button>
+        @if ($product->exists)
+          <a href="{{ route('shop.product', $product) }}" target="_blank" rel="noopener" class="btn btn-line" style="width:100%">{{ $product->is_active ? 'View in the shop' : 'Preview the draft' }}</a>
+        @endif
         <a href="{{ route('admin.products.index') }}" class="btn btn-line" style="width:100%">Cancel</a>
       </div>
     </div>

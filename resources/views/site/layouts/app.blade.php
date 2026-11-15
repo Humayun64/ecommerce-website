@@ -48,6 +48,7 @@
 @yield('content')
 
 @include('site.partials.footer')
+@include('site.partials.whatsapp')
 
 @stack('scripts')
 </body>

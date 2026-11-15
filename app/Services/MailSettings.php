@@ -11,7 +11,18 @@ use Illuminate\Support\Facades\Crypt;
  */
 class MailSettings
 {
-    /** @return array{on:bool, host:string, port:int, security:string, username:string, password:string, from_address:string, from_name:string, admin_copy:bool, admin_to:string} */
+    /** The address used when the web server sends and none was typed in. */
+    public function defaultFrom(): string
+    {
+        $host = preg_replace('/^www\./i', '', (string) parse_url((string) config('app.url'), PHP_URL_HOST));
+
+        // A made-up or local host would be refused by every inbox.
+        return $host !== '' && str_contains($host, '.') && ! filter_var($host, FILTER_VALIDATE_IP)
+            ? 'no-reply@' . strtolower($host)
+            : '';
+    }
+
+    /** @return array{mode:string, on:bool, host:string, port:int, security:string, username:string, password:string, from_address:string, from_name:string, admin_copy:bool, admin_to:string} */
     public function all(): array
     {
         $password = (string) Setting::get('mail_password', '');
@@ -25,6 +36,9 @@ class MailSettings
         }
 
         return [
+            // "server": the web server sends it, nothing to set up.
+            // "smtp":   a real mailbox, with a password.
+            'mode'         => Setting::get('mail_mode', 'smtp') === 'server' ? 'server' : 'smtp',
             'on'           => Setting::get('mail_on', '0') === '1',
             'host'         => trim((string) Setting::get('mail_host', '')),
             'port'         => (int) Setting::get('mail_port', 465),
@@ -42,12 +56,17 @@ class MailSettings
     {
         $s = $this->all();
 
+        if ($s['mode'] === 'server') {
+            return $s['on'] && function_exists('mail') && $this->fromFor($s) !== '';
+        }
+
         return $s['on'] && $s['host'] !== '' && $s['username'] !== '' && $s['password'] !== '' && $s['from_address'] !== '';
     }
 
     public function save(array $input): void
     {
         $pairs = [
+            'mail_mode'         => ($input['mode'] ?? 'smtp') === 'server' ? 'server' : 'smtp',
             'mail_on'           => ! empty($input['on']) ? '1' : '0',
             'mail_host'         => trim((string) ($input['host'] ?? '')),
             'mail_port'         => (string) (int) ($input['port'] ?? 465),
@@ -78,7 +97,18 @@ class MailSettings
             return;
         }
 
-        $s = $this->all();
+        $s    = $this->all();
+        $name = $s['from_name'] !== '' ? $s['from_name'] : (Setting::get('store_name') ?: config('app.name'));
+
+        if ($s['mode'] === 'server') {
+            config([
+                'mail.default'         => 'phpmail',
+                'mail.mailers.phpmail' => ['transport' => 'phpmail'],
+                'mail.from'            => ['address' => $this->fromFor($s), 'name' => $name],
+            ]);
+
+            return;
+        }
 
         config([
             'mail.default'      => 'smtp',
@@ -95,9 +125,14 @@ class MailSettings
             ],
             'mail.from' => [
                 'address' => $s['from_address'],
-                'name'    => $s['from_name'] !== '' ? $s['from_name'] : (Setting::get('store_name') ?: config('app.name')),
+                'name'    => $name,
             ],
         ]);
+    }
+
+    private function fromFor(array $s): string
+    {
+        return $s['from_address'] !== '' ? $s['from_address'] : $this->defaultFrom();
     }
 
     /** Where a copy of each new order goes, if that is switched on. */

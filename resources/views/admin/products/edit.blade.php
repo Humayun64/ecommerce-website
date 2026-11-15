@@ -29,5 +29,5 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/product-form.js') }}"></script>
+<script src="{{ asset('js/product-form.js') }}?v={{ filemtime(public_path('js/product-form.js')) }}"></script>
 @endpush

@@ -23,6 +23,8 @@ class EmailController extends Controller
             's'           => $s,
             'hasPassword' => $s['password'] !== '',
             'ready'       => $this->mail->ready(),
+            'defaultFrom' => $this->mail->defaultFrom(),
+            'canServer'   => function_exists('mail'),
             'envMailer'   => config('mail.default'),
         ]);
     }
@@ -30,6 +32,7 @@ class EmailController extends Controller
     public function update(Request $request)
     {
         $data = $request->validate([
+            'mode'         => ['required', Rule::in(['server', 'smtp'])],
             'on'           => ['nullable', 'boolean'],
             'host'         => ['nullable', 'string', 'max:120', 'regex:/^[A-Za-z0-9.\-]+$/'],
             'port'         => ['nullable', 'integer', 'min:1', 'max:65535'],
@@ -48,7 +51,9 @@ class EmailController extends Controller
         $this->mail->save($data);
 
         if ($request->boolean('on') && ! $this->mail->ready()) {
-            return back()->with('error', __('Saved, but email is not sending yet: the server, username, password and "from" address are all needed.'));
+            return back()->with('error', $data['mode'] === 'server'
+                ? __('Saved, but email is not sending yet: enter a "send from" address on your own domain, such as orders@yourdomain.com.')
+                : __('Saved, but email is not sending yet: the server, username, password and "from" address are all needed.'));
         }
 
         return back()->with('status', __('Email settings saved.'));
@@ -69,7 +74,7 @@ class EmailController extends Controller
                 fn ($message) => $message->to($data['to'])->subject(__('Test email from :shop', ['shop' => config('mail.from.name')]))
             );
         } catch (\Throwable $e) {
-            return back()->withInput()->with('error', __('The mail server refused: :why', ['why' => Str::limit($e->getMessage(), 400)]));
+            return back()->withInput()->with('error', __('The email was not sent: :why', ['why' => Str::limit($e->getMessage(), 400)]));
         }
 
         return back()->with('status', __('Test email sent to :to. Check the inbox, and the spam folder too.', ['to' => $data['to']]));

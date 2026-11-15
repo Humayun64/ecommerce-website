@@ -11,6 +11,14 @@
 .em-tick{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;line-height:1.5;margin-bottom:14px}
 .em-tick input{margin-top:3px;accent-color:var(--navy)}
 .em-tick span span{display:block;color:var(--ink-mute);font-size:12.5px}
+.em-modes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.em-mode{display:flex;gap:10px;align-items:flex-start;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;cursor:pointer;transition:border-color .15s,background .15s}
+.em-mode:has(input:checked){border-color:var(--navy);background:#F3F6FC}
+.em-mode input{margin-top:3px;accent-color:var(--navy)}
+.em-mode b{display:block;font-size:14px}
+.em-mode span span{display:block;font-size:12.5px;color:var(--ink-mute);line-height:1.5;margin-top:2px}
+.em-mode em{font-style:normal;font-size:11px;font-weight:700;color:var(--ok);background:#E5F3EB;border-radius:20px;padding:2px 8px;margin-left:6px}
+@media(max-width:700px){.em-modes{grid-template-columns:1fr}}
 .em-guide b{display:block;margin:14px 0 4px;color:var(--ink)}
 .em-guide b:first-child{margin-top:0}
 .em-guide{font-size:13px;color:var(--ink-mute);line-height:1.6}
@@ -29,7 +37,7 @@
     @if ($envMailer === 'log')
       Right now the site only writes emails to a log file, so customers receive nothing — no order confirmations and no password-reset links.
     @endif
-    Fill in the mail server below, tick <em>Send email</em>, save, then send yourself a test.
+    Choose how to send below, tick <em>Send email</em>, save, then send yourself a test.
   </div>
 @endif
 
@@ -40,11 +48,13 @@
       @csrf
       @method('PUT')
 
+      @php $mode = old('mode', $s['mode']); @endphp
+
       <div class="panel" style="border-radius:12px">
         <div class="panel-head">
           <div>
-            <h2>Mail server (SMTP)</h2>
-            <span class="sub">The mailbox the shop sends from</span>
+            <h2>How the shop sends email</h2>
+            <span class="sub">Order emails, status updates and password-reset links</span>
           </div>
           @if ($ready)
             <span class="em-state on">Sending</span>
@@ -56,6 +66,21 @@
         </div>
         <div class="panel-body">
 
+          <div class="em-modes" style="margin-bottom:16px">
+            <label class="em-mode">
+              <input type="radio" name="mode" value="server" @checked($mode === 'server') @disabled(! $canServer)>
+              <span><b>Simple — no SMTP <em>No setup</em></b>
+                <span>The website's own server sends the email. No mailbox or password needed.
+                @unless ($canServer) This server has it switched off, so it cannot be used here. @endunless</span></span>
+            </label>
+            <label class="em-mode">
+              <input type="radio" name="mode" value="smtp" @checked($mode === 'smtp')>
+              <span><b>SMTP mailbox</b>
+                <span>Sends through a real mailbox. Most reliable, and the least likely to land in spam.</span></span>
+            </label>
+          </div>
+
+          <div id="emSmtp" @if ($mode === 'server') hidden @endif>
           <div class="row2">
             <div class="field">
               <label for="host">Mail server</label>
@@ -89,12 +114,14 @@
               <div class="hint">Stored encrypted and never shown again.</div>
             </div>
           </div>
+          </div>
 
           <div class="row2">
             <div class="field">
               <label for="from_address">Send from (address)</label>
-              <input type="email" id="from_address" name="from_address" value="{{ old('from_address', $s['from_address']) }}" placeholder="orders@yourdomain.com">
-              <div class="hint">Use the same mailbox as the username, or the email may land in spam.</div>
+              <input type="email" id="from_address" name="from_address" value="{{ old('from_address', $s['from_address']) }}" placeholder="{{ $defaultFrom ?: 'orders@yourdomain.com' }}">
+              <div class="hint" id="emFromSmtp" @if ($mode === 'server') hidden @endif>Use the same mailbox as the username, or the email may land in spam.</div>
+              <div class="hint" id="emFromServer" @if ($mode !== 'server') hidden @endif>Must be on the shop's own domain{{ $defaultFrom ? ' — empty uses ' . $defaultFrom : '' }}. A Gmail address here will be rejected as fake.</div>
             </div>
             <div class="field">
               <label for="from_name">Send from (name)</label>
@@ -106,7 +133,7 @@
           <label class="em-tick">
             <input type="hidden" name="on" value="0">
             <input type="checkbox" name="on" value="1" @checked(old('on', $s['on']))>
-            <span><b>Send email</b><span>Order confirmations, status updates and password-reset links go out through this mailbox.</span></span>
+            <span><b>Send email</b><span>Order confirmations, status updates and password-reset links go out this way.</span></span>
           </label>
         </div>
       </div>
@@ -141,7 +168,7 @@
             <input type="email" id="to" name="to" required value="{{ old('to', auth()->user()->email) }}">
           </div>
           <button type="submit" class="btn btn-navy" style="width:100%" @disabled(! $ready)>Send test email</button>
-          <p class="sub" style="margin:10px 0 0">Save the settings first. If it fails, the mail server's own reason is shown here.</p>
+          <p class="sub" style="margin:10px 0 0">Save the settings first. If it fails, the reason is shown here.</p>
         </form>
       </div>
     </div>
@@ -149,6 +176,9 @@
     <div class="panel" style="border-radius:12px;margin-top:18px">
       <div class="panel-head"><h2>Common settings</h2></div>
       <div class="panel-body em-guide">
+        <b>Simple — no SMTP</b>
+        Nothing to fill in except where order emails should go. Some inboxes put these in spam at first: open one and press <em>Not spam</em> once.
+
         <b>Hostinger email</b>
         Server <code>smtp.hostinger.com</code>, SSL, port <code>465</code>. Username is the full address; password is that mailbox's password. Create the mailbox first in hPanel → Emails.
 
@@ -166,6 +196,17 @@
 <script>
 /* Changing the security type moves the port to its usual partner. */
 (function () {
+  /* The SMTP boxes only show when SMTP is chosen. */
+  var radios = document.querySelectorAll('input[name="mode"]');
+  function sync() {
+    var picked = document.querySelector('input[name="mode"]:checked');
+    var server = picked && picked.value === 'server';
+    document.getElementById('emSmtp').hidden = server;
+    document.getElementById('emFromSmtp').hidden = server;
+    document.getElementById('emFromServer').hidden = !server;
+  }
+  radios.forEach(function (r) { r.addEventListener('change', sync); });
+
   var security = document.getElementById('security');
   var port = document.getElementById('port');
   if (!security || !port) return;

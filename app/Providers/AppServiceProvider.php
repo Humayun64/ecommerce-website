@@ -33,6 +33,10 @@ class AppServiceProvider extends ServiceProvider
         // Outgoing email is set up in the admin panel. A mistake there must
         // never stop the site from loading, so it is applied inside a guard.
         try {
+            // "phpmail" sends through the web server itself, for shops
+            // that have not set up a mailbox.
+            \Illuminate\Support\Facades\Mail::extend('phpmail', fn () => new \App\Mail\Transport\PhpMailTransport());
+
             app(\App\Services\MailSettings::class)->apply();
         } catch (\Throwable $e) {
             // Fall back to whatever .env says.

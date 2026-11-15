@@ -33,7 +33,9 @@ class CatalogController extends Controller
 
     public function show(Product $product)
     {
-        abort_unless($product->is_active, 404);
+        // A draft is hidden from everyone except a signed-in admin, who
+        // sees it as a preview.
+        abort_unless($product->is_active || auth()->user()?->is_admin, 404);
 
         $product->load([
             'brand', 'category.parent', 'images',

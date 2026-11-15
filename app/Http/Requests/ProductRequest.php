@@ -65,7 +65,8 @@ class ProductRequest extends FormRequest
             'variants.*.cost_price'    => ['nullable', 'numeric', 'min:0'],
             'variants.*.stock'         => ['nullable', 'integer', 'min:0'],
 
-            'images'   => ['array', 'max:8'],
+            'main_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:6144'],
+            'images'   => ['array', 'max:12'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:6144'],
 
             'meta_title'       => ['nullable', 'string', 'max:70'],
