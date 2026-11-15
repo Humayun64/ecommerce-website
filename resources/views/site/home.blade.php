@@ -182,6 +182,26 @@
 </section>
 @endif
 
+{{-- a row of products for each department --}}
+@foreach ($shelves as $i => $shelf)
+<section class="hm-sec {{ $i % 2 === 0 ? 'hm-white' : 'hm-tint-blue' }}">
+  <div class="wrap">
+    <div class="sh">
+      <div>
+        <span class="hm-tag {{ ['', 'gold', 'violet', 'green'][$i % 4] }}">{{ trans_choice(':n product|:n products', $shelf['department']->products_count, ['n' => $shelf['department']->products_count]) }}</span>
+        <h2>{{ $shelf['department']->name }}</h2>
+      </div>
+      <a href="{{ route('shop.category', $shelf['department']) }}" class="seeall">{{ __('See all') }}</a>
+    </div>
+    <div class="grid">
+      @foreach ($shelf['products'] as $product)
+        @include('site.partials.product-card')
+      @endforeach
+    </div>
+  </div>
+</section>
+@endforeach
+
 {{-- delivery --}}
 <section class="hm-sec hm-white">
   <div class="wrap">

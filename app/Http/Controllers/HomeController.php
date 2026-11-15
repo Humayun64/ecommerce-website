@@ -13,7 +13,20 @@ class HomeController extends Controller
         $base = Product::active()
             ->with(['brand', 'primaryImage', 'variants']);
 
-        $featured = (clone $base)->featured()->take(6)->get();
+        $featured    = (clone $base)->featured()->take(12)->get();
+        $departments = $this->departments();
+
+        // A row of products for each department that has any, so the home
+        // page shows the whole range and not only the best sellers.
+        $shelves = $departments
+            ->filter(fn ($department) => $department->products_count > 0)
+            ->take(6)
+            ->map(fn ($department) => [
+                'department' => $department,
+                'products'   => (clone $base)->whereIn('category_id', $department->tree_ids)->latest('id')->take(6)->get(),
+            ])
+            ->filter(fn ($shelf) => $shelf['products']->isNotEmpty())
+            ->values();
 
         // "This week's pick" is chosen on a product's edit page. If nothing
         // is chosen, or that product is now a draft, the first featured
@@ -25,8 +38,9 @@ class HomeController extends Controller
             'featured'    => $featured,
             'pick'        => $pick ?? $featured->first(),
             'pickLabel'   => \App\Models\Setting::get('home_pick_label') ?: __("This week's pick"),
-            'newest'      => (clone $base)->latest('id')->take(6)->get(),
-            'departments' => $this->departments(),
+            'newest'      => (clone $base)->latest('id')->take(12)->get(),
+            'departments' => $departments,
+            'shelves'     => $shelves,
             'brands'      => Brand::active()->orderBy('sort_order')->take(6)->get(),
         ]);
     }
@@ -72,6 +86,7 @@ class HomeController extends Controller
             }
 
             $root->products_count = $count;
+            $root->tree_ids       = array_keys($seen);   // the department and everything under it
         }
 
         return $roots;
