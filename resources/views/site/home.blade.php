@@ -47,13 +47,13 @@
       </ul>
     </div>
 
-    @if ($featured->isNotEmpty())
-      @php $star = $featured->first(); @endphp
+    @if ($pick)
+      @php $star = $pick; @endphp
       <div class="hm-feat-wrap">
         <div class="feat">
           <span class="hm-pick">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2.5 2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z"/></svg>
-            {{ __("This week's pick") }}
+            {{ $pickLabel }}
           </span>
           <div class="feat-shot">
             @if ($star->primaryImage)

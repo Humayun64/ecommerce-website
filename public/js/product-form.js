@@ -384,3 +384,10 @@
   }
 })();
 
+/* The label box only shows while "big pick on the home page" is ticked. */
+(function () {
+  var pick = document.getElementById('home_pick');
+  var box = document.getElementById('pickLabelBox');
+  if (!pick || !box) return;
+  pick.addEventListener('change', function () { box.hidden = !pick.checked; });
+})();

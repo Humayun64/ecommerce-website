@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Models\DeliveryTier;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\Setting;
 use App\Models\ShippingZone;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
@@ -50,6 +51,7 @@ class ProductController extends Controller
             'categories' => Category::with('parent')->orderBy('name')->get(),
             'published'  => Product::where('is_active', true)->count(),
             'drafts'     => Product::where('is_active', false)->count(),
+            'pickId'     => (int) Setting::get('home_pick_product_id', 0),
         ]);
     }
 
@@ -76,6 +78,8 @@ class ProductController extends Controller
             return $product;
         });
 
+        $this->syncHomePick($product, $request);
+
         return redirect()->route('admin.products.edit', $product)
             ->with('status', $product->is_active
                 ? 'Product created and published. Check the images and the SEO panel.'
@@ -99,13 +103,20 @@ class ProductController extends Controller
             $this->storeImages($product, $request);
         });
 
-        return redirect()->route('admin.products.index')
-            ->with('status', $product->is_active ? 'Product updated.' : 'Product updated. It is a draft, so customers cannot see it.');
+        $this->syncHomePick($product, $request);
+
+        // Stay on the product, so more changes can be made straight away.
+        return redirect()->route('admin.products.edit', $product)
+            ->with('status', $product->is_active ? 'Product saved.' : 'Product saved. It is a draft, so customers cannot see it.');
     }
 
     public function destroy(Product $product)
     {
         $product->delete();
+
+        if ((int) Setting::get('home_pick_product_id', 0) === $product->id) {
+            Setting::put(['home_pick_product_id' => '', 'home_pick_label' => '']);
+        }
 
         return redirect()->route('admin.products.index')
             ->with('status', 'Product deleted. It is hidden from the storefront but the record is kept for old orders.');
@@ -141,6 +152,21 @@ class ProductController extends Controller
 
     /* ---------- helpers ---------- */
 
+    /** Only one product can be the home page pick, so it lives in the settings. */
+    private function syncHomePick(Product $product, ProductRequest $request): void
+    {
+        $current = (int) Setting::get('home_pick_product_id', 0);
+
+        if ($request->boolean('home_pick')) {
+            Setting::put([
+                'home_pick_product_id' => (string) $product->id,
+                'home_pick_label'      => trim((string) $request->input('home_pick_label', '')),
+            ]);
+        } elseif ($current === $product->id) {
+            Setting::put(['home_pick_product_id' => '', 'home_pick_label' => '']);
+        }
+    }
+
     private function formData(Product $product): array
     {
         $tiers = DeliveryTier::with('rates')->orderBy('sort_order')->get();
@@ -158,6 +184,8 @@ class ProductController extends Controller
 
         return [
             'product'       => $product,
+            'isHomePick'    => $product->exists && (int) Setting::get('home_pick_product_id', 0) === $product->id,
+            'homePickLabel' => (string) Setting::get('home_pick_label', ''),
             'brands'        => Brand::orderBy('name')->get(),
             'categories'    => Category::with('parent')->orderBy('name')->get()
                                    ->sortBy(fn ($c) => $c->full_name),
@@ -173,7 +201,7 @@ class ProductController extends Controller
 
     private function attributesFor(ProductRequest $request): array
     {
-        $data = $request->safe()->except(['variants', 'images', 'main_image', 'attribute_ids']);
+        $data = $request->safe()->except(['variants', 'images', 'main_image', 'attribute_ids', 'home_pick', 'home_pick_label']);
 
         $variants = collect($request->input('variants', []))
             ->filter(fn ($v) => filled($v['price'] ?? null) || filled($v['name'] ?? null));

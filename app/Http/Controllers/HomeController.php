@@ -13,8 +13,18 @@ class HomeController extends Controller
         $base = Product::active()
             ->with(['brand', 'primaryImage', 'variants']);
 
+        $featured = (clone $base)->featured()->take(6)->get();
+
+        // "This week's pick" is chosen on a product's edit page. If nothing
+        // is chosen, or that product is now a draft, the first featured
+        // product stands in.
+        $pickId = (int) \App\Models\Setting::get('home_pick_product_id', 0);
+        $pick   = $pickId ? (clone $base)->whereKey($pickId)->first() : null;
+
         return view('site.home', [
-            'featured'    => (clone $base)->featured()->take(6)->get(),
+            'featured'    => $featured,
+            'pick'        => $pick ?? $featured->first(),
+            'pickLabel'   => \App\Models\Setting::get('home_pick_label') ?: __("This week's pick"),
             'newest'      => (clone $base)->latest('id')->take(6)->get(),
             'departments' => $this->departments(),
             'brands'      => Brand::active()->orderBy('sort_order')->take(6)->get(),

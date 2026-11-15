@@ -103,11 +103,17 @@
             @endif
             @unless ($product->is_active)<span class="badge b-off">Draft</span>@endunless
             @if ($product->is_featured)<span class="badge b-gold">Featured</span>@endif
+            @if ($product->id === $pickId)<span class="badge" style="background:#FBEAF0;color:#B03A60">Home pick</span>@endif
           </td>
           <td class="right" style="white-space:nowrap">
             <a href="{{ route('shop.product', $product) }}" target="_blank" rel="noopener" class="btn btn-line btn-sm"
                title="{{ $product->is_active ? 'Open the product page in the shop' : 'Preview the draft (only you can see it)' }}">{{ $product->is_active ? 'View' : 'Preview' }}</a>
             <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-line btn-sm">Edit</a>
+            <form method="POST" action="{{ route('admin.products.destroy', $product) }}" style="display:inline"
+                  onsubmit="return confirm('Delete this product? It is removed from the shop. Old orders keep their record of it.')">
+              @csrf @method('DELETE')
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
           </td>
         </tr>
       @endforeach

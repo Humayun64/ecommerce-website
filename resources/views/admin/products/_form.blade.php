@@ -406,6 +406,19 @@
           Feature on the homepage
         </label>
       </div>
+      @php $picked = (bool) old('home_pick', $isHomePick); @endphp
+      <div class="field" style="margin-bottom:8px">
+        <label class="check">
+          <input type="hidden" name="home_pick" value="0">
+          <input type="checkbox" name="home_pick" id="home_pick" value="1" @checked($picked)>
+          Show as the big pick on the home page
+        </label>
+        <div class="hint">The large card at the top of the home page. Only one product at a time — ticking it here replaces the current one.</div>
+        <div id="pickLabelBox" style="margin-top:9px" @unless ($picked) hidden @endunless>
+          <label for="home_pick_label">Label on the card</label>
+          <input type="text" id="home_pick_label" name="home_pick_label" maxlength="40" value="{{ old('home_pick_label', $homePickLabel) }}" placeholder="This week's pick">
+        </div>
+      </div>
       <div class="form-actions" style="flex-direction:column">
         <button type="submit" class="btn btn-gold" style="width:100%">{{ $submit }}</button>
         @if ($product->exists)
