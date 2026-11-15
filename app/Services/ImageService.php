@@ -60,10 +60,44 @@ class ImageService
             return null;
         }
 
-        $contents = file_get_contents($file->getRealPath());
-        $image    = @imagecreatefromstring($contents);
+        // Opening a photo takes about five bytes of memory per pixel, far
+        // more than its size on disk. A photo too big for this server is
+        // stored as it is rather than crashing the page.
+        $size = @getimagesize($file->getRealPath());
+
+        if (! $size || ! $this->fitsInMemory((int) $size[0], (int) $size[1])) {
+            return null;
+        }
+
+        try {
+            $image = @imagecreatefromstring(file_get_contents($file->getRealPath()));
+        } catch (\Throwable $e) {
+            return null;
+        }
 
         return $image ?: null;
+    }
+
+    private function fitsInMemory(int $width, int $height): bool
+    {
+        if ($width < 1 || $height < 1 || $width * $height > 40_000_000) {
+            return false;
+        }
+
+        $limit = trim((string) ini_get('memory_limit'));
+
+        if ($limit === '' || $limit === '-1') {
+            return true;
+        }
+
+        $bytes = (int) $limit * match (strtolower(substr($limit, -1))) {
+            'g' => 1024 ** 3, 'm' => 1024 ** 2, 'k' => 1024, default => 1,
+        };
+
+        // The photo itself, the resized copy, and room for the rest of the page.
+        $needed = $width * $height * 5 + self::MAX_EDGE * self::MAX_EDGE * 5 + 24 * 1024 * 1024;
+
+        return memory_get_usage(true) + $needed < $bytes;
     }
 
     private function resize($image)

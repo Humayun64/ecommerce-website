@@ -37,7 +37,17 @@ class Product extends Model
     {
         static::saving(function (Product $product) {
             if (blank($product->slug)) {
-                $product->slug = Str::slug($product->name);
+                // Two products can share a name, but never a web address.
+                // Deleted products still hold theirs, so they are counted too.
+                $base = Str::slug($product->name) ?: 'product';
+                $slug = $base;
+                $n    = 2;
+
+                while (static::withTrashed()->where('slug', $slug)->where('id', '!=', $product->id ?? 0)->exists()) {
+                    $slug = $base . '-' . $n++;
+                }
+
+                $product->slug = $slug;
             }
         });
     }
