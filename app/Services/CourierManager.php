@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Order;
 use App\Models\Setting;
 use App\Services\Couriers\Courier;
+use App\Services\Couriers\PathaoCourier;
 use App\Services\Couriers\RedxCourier;
 use App\Services\Couriers\SteadfastCourier;
 use Illuminate\Support\Facades\Crypt;
@@ -21,6 +22,7 @@ class CourierManager
     private const DRIVERS = [
         'steadfast' => SteadfastCourier::class,
         'redx'      => RedxCourier::class,
+        'pathao'    => PathaoCourier::class,
     ];
 
     public function __construct(private OrderStatus $statuses)
@@ -47,22 +49,32 @@ class CourierManager
         return array_map(fn ($class) => app($class), self::DRIVERS);
     }
 
-    /** @return array{key:string, secret:string, sandbox:bool, on:bool} */
-    public function creds(string $code): array
+    /** A saved value that is kept encrypted. Empty if missing or unreadable. */
+    private function hidden(string $name): string
     {
-        $secret = (string) Setting::get("courier_{$code}_secret", '');
+        $value = (string) Setting::get($name, '');
 
-        if ($secret !== '') {
-            try {
-                $secret = Crypt::decryptString($secret);
-            } catch (\Throwable $e) {
-                $secret = '';
-            }
+        if ($value === '') {
+            return '';
         }
 
+        try {
+            return Crypt::decryptString($value);
+        } catch (\Throwable $e) {
+            return '';
+        }
+    }
+
+    /** @return array{key:string, secret:string, username:string, password:string, store:string, sandbox:bool, on:bool} */
+    public function creds(string $code): array
+    {
         return [
-            'key'     => trim((string) Setting::get("courier_{$code}_key", '')),
-            'secret'  => $secret,
+            'key'      => trim((string) Setting::get("courier_{$code}_key", '')),
+            'secret'   => $this->hidden("courier_{$code}_secret"),
+            // Only some couriers ask for these.
+            'username' => trim((string) Setting::get("courier_{$code}_username", '')),
+            'password' => $this->hidden("courier_{$code}_password"),
+            'store'    => trim((string) Setting::get("courier_{$code}_store", '')),
             'sandbox' => Setting::get("courier_{$code}_sandbox", '0') === '1',
             'on'      => Setting::get("courier_{$code}_on", '0') === '1',
         ];
@@ -108,9 +120,16 @@ class CourierManager
             $pairs["courier_{$code}_key"] = trim((string) ($input['key'] ?? ''));
         }
 
-        // An empty box means "keep the secret already saved".
-        if (trim((string) ($input['secret'] ?? '')) !== '') {
-            $pairs["courier_{$code}_secret"] = Crypt::encryptString(trim($input['secret']));
+        if (isset($driver->fields()['username'])) {
+            $pairs["courier_{$code}_username"] = trim((string) ($input['username'] ?? ''));
+            $pairs["courier_{$code}_store"]    = preg_replace('/\D+/', '', (string) ($input['store'] ?? ''));
+        }
+
+        // An empty box means "keep the one already saved".
+        foreach (['secret', 'password'] as $field) {
+            if (isset($driver->fields()[$field]) && trim((string) ($input[$field] ?? '')) !== '') {
+                $pairs["courier_{$code}_{$field}"] = Crypt::encryptString(trim($input[$field]));
+            }
         }
 
         Setting::put($pairs);

@@ -114,7 +114,7 @@
       @elseif (in_array($order->status, ['cancelled', 'returned']))
         <p class="sub" style="margin:0">This order is {{ strtolower($order->status_label) }}, so it cannot be sent to a courier.</p>
       @elseif (empty($courierChoices))
-        <p class="sub" style="margin:0 0 12px">No courier is connected yet. Add your Steadfast or RedX keys and switch one on.</p>
+        <p class="sub" style="margin:0 0 12px">No courier is connected yet. Add your Steadfast, RedX or Pathao keys and switch one on.</p>
         <a href="{{ route('admin.couriers.index') }}" class="btn btn-navy">Set up a courier</a>
       @else
         <form method="POST" action="{{ route('admin.orders.courier', $order) }}" id="courierForm">

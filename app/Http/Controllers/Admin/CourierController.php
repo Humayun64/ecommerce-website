@@ -31,6 +31,9 @@ class CourierController extends Controller
                 'on'        => $creds['on'],
                 'key'       => $creds['key'],
                 'hasSecret' => $creds['secret'] !== '',
+                'username'    => $creds['username'],
+                'hasPassword' => $creds['password'] !== '',
+                'store'       => $creds['store'],
                 'isSandbox' => $creds['sandbox'],
                 'connected' => $this->couriers->connected($code),
             ];
@@ -49,8 +52,13 @@ class CourierController extends Controller
         $data = $request->validate([
             'key'     => ['nullable', 'string', 'max:200'],
             'secret'  => ['nullable', 'string', 'max:2000'],
+            'username' => ['nullable', 'string', 'max:160'],
+            'password' => ['nullable', 'string', 'max:300'],
+            'store'    => ['nullable', 'string', 'max:12', 'regex:/^[0-9]*$/'],
             'on'      => ['nullable', 'boolean'],
             'sandbox' => ['nullable', 'boolean'],
+        ], [
+            'store.regex' => __('The Store ID is a number. Press Test connection to see your stores and their IDs.'),
         ]);
 
         $this->couriers->save($code, $data);

@@ -19,6 +19,12 @@
 .cr-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:4px}
 </style>
 
+@if ($errors->any())
+  <div class="alert alert-bad" style="margin-bottom:18px">
+    <ul style="margin:0;padding-left:18px">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+  </div>
+@endif
+
 <div class="note" style="margin-bottom:18px">
   <b>How this works.</b>
   Enter the keys from the courier's merchant panel, switch the courier on, and press <em>Test connection</em>.
@@ -30,7 +36,7 @@
   @foreach ($couriers as $code => $c)
     <div class="panel cr-card">
       <div class="cr-head">
-        <span class="cr-logo" style="background:{{ $code === 'redx' ? '#E4002B' : '#0B8B6B' }}">{{ mb_substr($c['label'], 0, 1) }}</span>
+        <span class="cr-logo" style="background:{{ ['redx' => '#E4002B', 'pathao' => '#E83330'][$code] ?? '#0B8B6B' }}">{{ mb_substr($c['label'], 0, 1) }}</span>
         <h2>{{ $c['label'] }}</h2>
         @if ($c['on'] && $c['connected'])
           <span class="cr-state on">On{{ $c['isSandbox'] ? ' · test mode' : '' }}</span>
@@ -60,11 +66,29 @@
             <div class="hint">Stored encrypted and never shown again.</div>
           </div>
 
+          @if (isset($c['fields']['username']))
+            <div class="field">
+              <label for="{{ $code }}_username">{{ $c['fields']['username'] }}</label>
+              <input type="text" id="{{ $code }}_username" name="username" value="{{ $c['username'] }}" autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="{{ $code }}_password">{{ $c['fields']['password'] }}</label>
+              <input type="password" id="{{ $code }}_password" name="password" autocomplete="new-password"
+                     placeholder="{{ $c['hasPassword'] ? 'Saved — leave empty to keep it' : '' }}">
+              <div class="hint">The login for the {{ $c['label'] }} merchant panel. Stored encrypted.</div>
+            </div>
+            <div class="field">
+              <label for="{{ $code }}_store">Store ID <span class="sub">(optional)</span></label>
+              <input type="text" id="{{ $code }}_store" name="store" inputmode="numeric" value="{{ $c['store'] }}" autocomplete="off">
+              <div class="hint">The pickup point. Leave empty to use the first store; <em>Test connection</em> lists your stores and their IDs.</div>
+            </div>
+          @endif
+
           @if ($c['sandbox'])
             <label class="cr-tick">
               <input type="hidden" name="sandbox" value="0">
               <input type="checkbox" name="sandbox" value="1" @checked($c['isSandbox'])>
-              <span><b>Test mode</b><span>Uses the courier's test server. No real parcel is booked. A test token and a live token are different.</span></span>
+              <span><b>Test mode</b><span>Uses the courier's test server. No real parcel is booked. Test keys and live keys are different.</span></span>
             </label>
           @else
             <p class="sub" style="margin:0 0 12px">{{ $c['label'] }} has no test server — every booking is a real parcel.</p>
