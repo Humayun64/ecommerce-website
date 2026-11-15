@@ -256,11 +256,15 @@ class ProductController extends Controller
         if ($request->hasFile('main_image')) {
             $product->images()->update(['is_primary' => false]);
 
+            // The main image sits first, at position 0. The others move down
+            // one place; the column cannot hold a number below zero.
+            $product->images()->increment('sort_order');
+
             $product->images()->create([
                 'path'       => $this->images->store($request->file('main_image')),
                 'alt'        => $product->name,
                 'is_primary' => true,
-                'sort_order' => (int) $product->images()->min('sort_order') - 1,
+                'sort_order' => 0,
             ]);
         }
 
