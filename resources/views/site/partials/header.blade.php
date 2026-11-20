@@ -21,12 +21,16 @@
         <path d="M4 30c8 7 28 7 36-6" fill="none" stroke="#14305A" stroke-width="2.6" stroke-linecap="round"/>
       </svg>
     @endif
-    <div>
-      <div class="bname">{{ $settings['store_name'] ?? 'AMJR Global' }}</div>
-      @if (!empty($settings['store_tagline']))
-        <div class="btag">{{ $settings['store_tagline'] }}</div>
-      @endif
-    </div>
+    {{-- An uploaded logo already carries the shop's name, so the written
+         name is only shown when there is no logo. --}}
+    @if (empty($settings['logo']))
+      <div>
+        <div class="bname">{{ $settings['store_name'] ?? 'AMJR Global' }}</div>
+        @if (!empty($settings['store_tagline']))
+          <div class="btag">{{ $settings['store_tagline'] }}</div>
+        @endif
+      </div>
+    @endif
   </a>
 
   <div class="search">
